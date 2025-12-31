@@ -1,0 +1,42 @@
+package com.abed.perfumeshop.Item.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@Builder
+@Table(name = "item_prices")
+@AllArgsConstructor
+@NoArgsConstructor
+public class ItemPrice {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, updatable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Builder.Default
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime effectiveFrom = LocalDateTime.now();
+
+    private LocalDateTime effectiveTo;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
+    private Item item;
+
+}
