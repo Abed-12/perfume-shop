@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -24,7 +25,7 @@ public class CouponRequest {
 
     @NotNull(message = "{coupon.discountValue.required}")
     @Positive(message = "{coupon.discountValue.positive}")
-    private Double discountValue;
+    private BigDecimal discountValue;
 
     @NotNull(message = "{coupon.expiryDate.required}")
     private LocalDateTime expiryDate;

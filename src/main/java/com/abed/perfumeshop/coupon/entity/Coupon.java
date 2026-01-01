@@ -5,6 +5,7 @@ import com.abed.perfumeshop.common.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,8 +28,8 @@ public class Coupon {
     @Column(nullable = false, updatable = false)
     private DiscountType discountType;
 
-    @Column(nullable = false, updatable = false)
-    private Double discountValue;
+    @Column(nullable = false, updatable = false, precision = 10, scale = 2)
+    private BigDecimal discountValue;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;

@@ -3,6 +3,7 @@ package com.abed.perfumeshop.discount.entity;
 import com.abed.perfumeshop.common.enums.DiscountType;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,7 +17,7 @@ public class GlobalDiscount {
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
 
-    private Double discountValue;
+    private BigDecimal discountValue;
 
     private LocalDateTime startDate;
     private LocalDateTime endDate;

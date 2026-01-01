@@ -28,7 +28,7 @@ public class CreatePerfumeRequest {
     private BigDecimal price;
 
     @Valid
-    @NotEmpty(message = "{translations.required}")
+    @NotEmpty(message = "{item.translations.required}")
     private List<ItemTranslationRequest> translations;
 
     @NotNull(message = "{perfume.size.required}")

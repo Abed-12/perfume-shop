@@ -4,6 +4,7 @@ import com.abed.perfumeshop.Item.entity.Item;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,13 +24,7 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(nullable = false)
-    private Double unitPrice;
-
-    @Column(nullable = false)
-    private Double totalPrice;
-
-    @Column(nullable = false)
-    private Double discountRate;
+    private BigDecimal unitPrice;
 
     @Builder.Default
     @Column(nullable = false, updatable = false)

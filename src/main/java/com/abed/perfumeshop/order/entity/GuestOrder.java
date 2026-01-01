@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.order.entity;
 
+import com.abed.perfumeshop.common.enums.Governorate;
 import com.abed.perfumeshop.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,11 +31,15 @@ public class GuestOrder {
 
     private String alternativePhoneNumber;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String governorate;
+    private Governorate governorate;
 
     @Column(nullable = false)
     private String address;
+
+    @Column(nullable = false, unique = true, updatable = false)
+    private String trackingToken;
 
     @ManyToOne
     private Customer claimedByCustomer;
