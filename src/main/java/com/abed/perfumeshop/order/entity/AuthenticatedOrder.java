@@ -4,6 +4,9 @@ import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -28,5 +31,9 @@ public class AuthenticatedOrder {
 
     @ManyToOne
     private Coupon coupon;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
 }

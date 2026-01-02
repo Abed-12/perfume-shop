@@ -4,6 +4,8 @@ import com.abed.perfumeshop.admin.entity.Admin;
 import com.abed.perfumeshop.common.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,8 +50,11 @@ public class Coupon {
     @JoinColumn(nullable = false, updatable = false)
     private Admin createdBy;
 
-    @Builder.Default
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

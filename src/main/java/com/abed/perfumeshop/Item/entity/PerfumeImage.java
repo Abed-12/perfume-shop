@@ -2,6 +2,10 @@ package com.abed.perfumeshop.Item.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -35,5 +39,12 @@ public class PerfumeImage {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     private Perfume perfume;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

@@ -5,6 +5,10 @@ import com.abed.perfumeshop.common.enums.PerfumeSize;
 import com.abed.perfumeshop.common.enums.PerfumeType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -34,5 +38,12 @@ public class Perfume {
     @OneToOne(optional = false)
     @JoinColumn(nullable = false, unique = true, updatable = false)
     private Item item;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }

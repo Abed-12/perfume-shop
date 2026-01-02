@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,8 +75,6 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
         customer.setGovernorate(customerUpdateRequest.getGovernorate());
         customer.setAddress(customerUpdateRequest.getAddress());
 
-        customer.setUpdatedAt(LocalDateTime.now());
-
         customerRepo.save(customer);
 
         return Response.builder()
@@ -99,7 +96,6 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
         }
 
         customer.setPassword(passwordEncoder.encode(newPassword));
-        customer.setUpdatedAt(LocalDateTime.now());
 
         customerRepo.save(customer);
 

@@ -3,6 +3,7 @@ package com.abed.perfumeshop.passwordResetCode.entity;
 import com.abed.perfumeshop.common.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -36,8 +37,8 @@ public class PasswordResetCode {
     @Column(nullable = false)
     private Long userId;
 
-    @Builder.Default
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
 }

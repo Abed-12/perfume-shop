@@ -17,7 +17,7 @@ public class UpdatePerfumeRequest {
     private String name;
 
     @NotNull(message = "{perfume.quantity.required}")
-    @Min(value = 0, message = "{perfume.quantity.min}")
+    @Min(value = 0, message = "{perfume.quantity.cannot.be.negative}")
     private Integer quantity;
 
     @NotBlank(message = "{perfume.brand.required}")

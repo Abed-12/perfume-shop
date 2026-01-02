@@ -5,6 +5,7 @@ import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.order.entity.Order;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -33,14 +34,14 @@ public class Notification {
     @Column(nullable = false)
     private NotificationType type;
 
-    @Builder.Default
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @ManyToOne
     private Order order;
 
     @ManyToOne
     private Coupon coupon;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
 }

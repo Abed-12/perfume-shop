@@ -21,7 +21,7 @@ public class GuestOrderController {
     private final GuestOrderService guestOrderService;
 
     @PostMapping
-    public ResponseEntity<Response<GuestOrderResponseDTO>> createOrder(@RequestBody @Valid CreateGuestOrderRequest createGuestOrderRequest){
+    public ResponseEntity<Response<GuestOrderResponseDTO>> createGuestOrder(@RequestBody @Valid CreateGuestOrderRequest createGuestOrderRequest){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(guestOrderService.createGuestOrder(createGuestOrderRequest));
     }

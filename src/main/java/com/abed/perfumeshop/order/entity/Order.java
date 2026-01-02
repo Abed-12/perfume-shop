@@ -3,6 +3,7 @@ package com.abed.perfumeshop.order.entity;
 import com.abed.perfumeshop.common.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,9 +36,9 @@ public class Order {
     @Builder.Default
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
-    @Builder.Default
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime orderDate = LocalDateTime.now();
+    private LocalDateTime orderDate;
 
     private LocalDateTime deliveredAt;
     private LocalDateTime cancelledAt;

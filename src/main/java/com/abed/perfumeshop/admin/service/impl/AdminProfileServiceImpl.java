@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,8 +62,6 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         admin.setLastName(adminUpdateRequest.getLastName());
         admin.setEmail(adminUpdateRequest.getEmail());
 
-        admin.setUpdatedAt(LocalDateTime.now());
-
         adminRepo.save(admin);
 
         return Response.builder()
@@ -86,7 +83,6 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         }
 
         admin.setPassword(passwordEncoder.encode(newPassword));
-        admin.setUpdatedAt(LocalDateTime.now());
 
         adminRepo.save(admin);
 

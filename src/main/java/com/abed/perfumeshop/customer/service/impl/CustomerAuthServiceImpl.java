@@ -16,6 +16,8 @@ import com.abed.perfumeshop.customer.repo.CustomerRepo;
 import com.abed.perfumeshop.customer.service.CustomerAuthService;
 import com.abed.perfumeshop.notification.dto.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
+import com.abed.perfumeshop.order.entity.GuestOrder;
+import com.abed.perfumeshop.order.repo.GuestOrderRepo;
 import com.abed.perfumeshop.passwordResetCode.entity.PasswordResetCode;
 import com.abed.perfumeshop.passwordResetCode.repo.PasswordResetCodeRepo;
 import com.abed.perfumeshop.passwordResetCode.service.CodeGenerator;
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -40,6 +43,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
 
     private final CustomerRepo customerRepo;
     private final AdminRepo adminRepo;
+    private final GuestOrderRepo guestOrderRepo;
     private final NotificationSenderFacade notificationSenderFacade;
     private final PasswordResetCodeRepo passwordResetCodeRepo;
     private final CodeGenerator codeGenerator;
@@ -51,6 +55,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
     private String resetLink;
 
     @Override
+    @Transactional
     public Response<?> register(CustomerRegisterRequest customerRegisterRequest) {
         String email = customerRegisterRequest.getEmail();
         if (customerRepo.existsByEmail(email) || adminRepo.existsByEmail(email)) {
@@ -69,6 +74,17 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 .build();
 
         customerRepo.save(customer);
+
+        // Auto-claim unclaimed guest orders with same email
+        List<GuestOrder> unclaimedOrders = guestOrderRepo.findByEmailAndClaimedByCustomerIsNull(email);
+
+        if (!unclaimedOrders.isEmpty()){
+            unclaimedOrders.forEach(guestOrder -> {
+                guestOrder.setClaimedByCustomer(customer);
+                guestOrder.setClaimedAt(LocalDateTime.now());
+            });
+            guestOrderRepo.saveAll(unclaimedOrders);
+        }
 
         // Send welcome email of the user
         Map<String, Object> vars = new HashMap<>();

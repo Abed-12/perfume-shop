@@ -3,6 +3,7 @@ package com.abed.perfumeshop.order.entity;
 import com.abed.perfumeshop.Item.entity.Item;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,10 +27,6 @@ public class OrderItem {
     @Column(nullable = false)
     private BigDecimal unitPrice;
 
-    @Builder.Default
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     private Order order;
@@ -37,5 +34,9 @@ public class OrderItem {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     private Item item;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
 }

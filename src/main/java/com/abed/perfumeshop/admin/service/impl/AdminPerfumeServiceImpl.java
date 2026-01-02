@@ -125,8 +125,12 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
         item.setName(updatePerfumeRequest.getName());
         item.setBrand(updatePerfumeRequest.getBrand());
         item.setQuantity(updatePerfumeRequest.getQuantity());
-        item.setActive(updatePerfumeRequest.getActive());
-        item.setUpdatedAt(LocalDateTime.now());
+
+        if (updatePerfumeRequest.getQuantity() == 0) {
+            item.setActive(false);
+        } else {
+            item.setActive(updatePerfumeRequest.getActive());
+        }
 
         // Update perfume
         perfume.setPerfumeSize(updatePerfumeRequest.getPerfumeSize());

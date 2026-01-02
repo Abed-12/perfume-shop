@@ -4,6 +4,7 @@ import com.abed.perfumeshop.common.enums.Governorate;
 import com.abed.perfumeshop.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -49,5 +50,9 @@ public class GuestOrder {
     @OneToOne(optional = false)
     @JoinColumn(nullable = false, unique = true, updatable = false)
     private Order order;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
 }
