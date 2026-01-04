@@ -8,10 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PerfumeRepo extends JpaRepository<Perfume, Long> {
 
     Page<Perfume> findByItem_ActiveTrue(Pageable pageable);
+
+    @Query("SELECT p FROM Perfume p " +
+            "WHERE p.item.id IN :itemIds")
+    List<Perfume> findByItemIds(@Param("itemIds") List<Long> itemIds);
 
     @Query("SELECT DISTINCT p FROM Perfume p " +
             "LEFT JOIN ItemTranslation t ON t.item = p.item " +

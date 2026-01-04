@@ -8,7 +8,7 @@ import com.abed.perfumeshop.common.res.Response;
 
 public interface PublicPerfumeService {
 
-    Response<PageResponse<PerfumeCardDTO>> getAllPerfumes(int page, int size);
+    Response<PageResponse<PerfumeCardDTO>> getActivePerfumes(int page, int size);
 
     Response<PerfumeDetailDTO> getPerfumeById(Long id);
 

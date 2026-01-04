@@ -40,7 +40,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Response<PageResponse<PerfumeCardDTO>> getAllPerfumes(int page, int size) {
+    public Response<PageResponse<PerfumeCardDTO>> getActivePerfumes(int page, int size) {
         Page<Perfume> perfumesPage = perfumeRepo.findByItem_ActiveTrue(PageRequest.of(page, size));
         return buildPerfumeCardResponse(perfumesPage, "perfumes.retrieved");
     }

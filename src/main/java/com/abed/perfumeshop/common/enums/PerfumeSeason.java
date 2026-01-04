@@ -7,8 +7,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PerfumeSeason implements LocalizableEnum{
     WINTER("perfume.season.winter"),
-    SUMMER("perfume.season.summer");
+    SPRING("perfume.season.spring"),
+    SUMMER("perfume.season.summer"),
+    FALL("perfume.season.fall");
 
     private final String messageKey;
 }
-

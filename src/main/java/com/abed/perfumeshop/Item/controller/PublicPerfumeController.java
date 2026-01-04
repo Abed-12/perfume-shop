@@ -22,11 +22,11 @@ public class PublicPerfumeController {
     private final PublicPerfumeService publicPerfumeService;
 
     @GetMapping
-    public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> getAllPerfumes(
+    public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> getActivePerfumes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ){
-        return ResponseEntity.ok(publicPerfumeService.getAllPerfumes(page, size));
+        return ResponseEntity.ok(publicPerfumeService.getActivePerfumes(page, size));
     }
 
     @GetMapping("/{id}")

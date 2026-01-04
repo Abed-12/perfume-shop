@@ -11,4 +11,3 @@ public enum PerfumeSize implements LocalizableEnum {
 
     private final String messageKey;
 }
-

@@ -1,15 +1,17 @@
 package com.abed.perfumeshop.admin.service.impl;
 
-import com.abed.perfumeshop.Item.dto.CreatePerfumeRequest;
-import com.abed.perfumeshop.Item.dto.ItemTranslationRequest;
-import com.abed.perfumeshop.Item.dto.UpdatePerfumeRequest;
+import com.abed.perfumeshop.Item.dto.*;
 import com.abed.perfumeshop.Item.entity.*;
 import com.abed.perfumeshop.Item.repo.*;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.admin.service.AdminPerfumeService;
+import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.exception.*;
 import com.abed.perfumeshop.common.res.Response;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,15 +19,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
 public class AdminPerfumeServiceImpl implements AdminPerfumeService {
+
+    private static final String BASE_IMAGE_URL = "/api/public/perfumes";
 
     private final ItemRepo itemRepo;
     private final PerfumeRepo perfumeRepo;
@@ -33,6 +35,13 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
     private final ItemTranslationRepo itemTranslationRepo;
     private final PerfumeImageRepo perfumeImageRepo;
     private final AdminHelper adminHelper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Response<PageResponse<AdminPerfumeCardDTO>> getAllPerfumes(int page, int size) {
+        Page<Perfume> perfumesPage = perfumeRepo.findAll(PageRequest.of(page, size));
+        return buildAdminPerfumeCardResponse(perfumesPage, "perfumes.retrieved");
+    }
 
     @Override
     @Transactional
@@ -301,6 +310,97 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
     }
 
     // ========== Private Helper Methods ==========
+    private Response<PageResponse<AdminPerfumeCardDTO>> buildAdminPerfumeCardResponse(Page<Perfume> perfumesPage, String message) {
+        List<Perfume> perfumes = perfumesPage.getContent();
+
+        List<Long> perfumeIds = perfumes.stream()
+                .map(Perfume::getId)
+                .toList();
+
+        List<Long> itemIds = perfumes.stream()
+                .map(p -> p.getItem().getId())
+                .toList();
+
+        List<PerfumeImage> primaryImages = perfumeImageRepo.findPrimaryImagesByPerfumeIds(perfumeIds);
+        List<ItemPrice> allPrices = itemPriceRepo.findCurrentActivePricesByItemIds(itemIds);
+        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIdsAndLocale(
+                itemIds,
+                LocaleContextHolder.getLocale().getLanguage()
+        );
+
+        Map<Long, PerfumeImage> primaryImageByPerfume = primaryImages.stream()
+                .collect(Collectors.toMap(
+                        img -> img.getPerfume().getId(),
+                        img -> img
+                ));
+
+        Map<Long, ItemPrice> pricesByItem = allPrices.stream()
+                .collect(Collectors.toMap(
+                        itemPrice -> itemPrice.getItem().getId(),
+                        p -> p
+                ));
+
+        Map<Long, ItemTranslation> translationsByItem = allTranslations.stream()
+                .collect(Collectors.toMap(
+                        itemTranslation -> itemTranslation.getItem().getId(),
+                        t -> t
+                ));
+
+        List<AdminPerfumeCardDTO> perfumeCards = perfumes.stream()
+                .map(perfume -> mapToAdminPerfumeCard(
+                        perfume,
+                        primaryImageByPerfume.get(perfume.getId()),
+                        pricesByItem.get(perfume.getItem().getId()),
+                        translationsByItem.get(perfume.getItem().getId())
+                ))
+                .toList();
+
+        PageResponse<AdminPerfumeCardDTO> pageResponse = PageResponse.<AdminPerfumeCardDTO>builder()
+                .content(perfumeCards)
+                .page(PageResponse.PageInfo.builder()
+                        .size(perfumesPage.getSize())
+                        .number(perfumesPage.getNumber())
+                        .totalElements(perfumesPage.getTotalElements())
+                        .totalPages(perfumesPage.getTotalPages())
+                        .build())
+                .build();
+
+        return Response.<PageResponse<AdminPerfumeCardDTO>>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message(message)
+                .data(pageResponse)
+                .build();
+    }
+
+    private AdminPerfumeCardDTO mapToAdminPerfumeCard(
+            Perfume perfume,
+            PerfumeImage primaryImage,
+            ItemPrice price,
+            ItemTranslation translation
+    ) {
+        Item item = perfume.getItem();
+
+        if (primaryImage == null) {
+            throw new NotFoundException("image.not.found");
+        }
+
+        AdminPerfumeCardDTO.AdminPerfumeCardDTOBuilder builder = AdminPerfumeCardDTO.builder()
+                .id(perfume.getId())
+                .name(item.getName())
+                .brand(item.getBrand())
+                .active(item.getActive())
+                .quantity(item.getQuantity())
+                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId());
+
+        Optional.ofNullable(price)
+                .ifPresent(p -> builder.currentPrice(p.getPrice()));
+
+        Optional.ofNullable(translation)
+                .ifPresent(t -> builder.translatedName(t.getName()));
+
+        return builder.build();
+    }
+
     private void validateCreatePerfumeRequest(
             CreatePerfumeRequest createPerfumeRequest,
             List<MultipartFile> images,

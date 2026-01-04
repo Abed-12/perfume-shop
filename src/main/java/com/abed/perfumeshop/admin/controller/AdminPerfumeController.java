@@ -1,8 +1,10 @@
 package com.abed.perfumeshop.admin.controller;
 
+import com.abed.perfumeshop.Item.dto.AdminPerfumeCardDTO;
 import com.abed.perfumeshop.Item.dto.CreatePerfumeRequest;
 import com.abed.perfumeshop.Item.dto.UpdatePerfumeRequest;
 import com.abed.perfumeshop.admin.service.AdminPerfumeService;
+import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.res.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,14 @@ import java.util.List;
 public class AdminPerfumeController {
 
     private final AdminPerfumeService adminPerfumeService;
+
+    @GetMapping
+    public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> getAllPerfumes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ){
+        return ResponseEntity.ok(adminPerfumeService.getAllPerfumes(page, size));
+    }
 
     @PostMapping
     public ResponseEntity<Response<?>> createPerfume(
