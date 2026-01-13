@@ -20,7 +20,7 @@ public interface CustomerRepo extends JpaRepository<Customer, Long> {
     Optional<Customer> findByEmail(String email);
 
     @Query("SELECT c FROM Customer c " +
-            "WHERE (:email IS null or c.email = :email)")
-    Page<Customer> findAllByFilter(@Param("email") String email, Pageable pageable);
+            "WHERE (:email IS NULL OR c.email = :email)")
+    Page<Customer> findAllOrByEmail(@Param("email") String email, Pageable pageable);
 
 }

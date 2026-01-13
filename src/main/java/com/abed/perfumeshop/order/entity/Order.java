@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.order.entity;
 
+import com.abed.perfumeshop.common.enums.CancellationSource;
 import com.abed.perfumeshop.common.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,6 +22,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private String orderNumber;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 
@@ -35,6 +39,12 @@ public class Order {
     @Column(nullable = false, precision = 10, scale = 2)
     @Builder.Default
     private BigDecimal totalPrice = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    private CancellationSource cancellationSource;
+
+    @Column(columnDefinition = "TEXT")
+    private String cancellationReason;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

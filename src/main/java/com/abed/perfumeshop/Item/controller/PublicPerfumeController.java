@@ -8,6 +8,7 @@ import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.res.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,21 +27,45 @@ public class PublicPerfumeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ){
-        return ResponseEntity.ok(publicPerfumeService.getActivePerfumes(page, size));
+        PageResponse<PerfumeCardDTO> pageResponse = publicPerfumeService.getActivePerfumes(page, size);
+
+        return ResponseEntity.ok(
+                Response.<PageResponse<PerfumeCardDTO>>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfumes.retrieved")
+                        .data(pageResponse)
+                        .build()
+        );
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Response<PerfumeDetailDTO>> getPerfumeById(@PathVariable Long id){
-        return ResponseEntity.ok(publicPerfumeService.getPerfumeById(id));
+        PerfumeDetailDTO perfumeDetail = publicPerfumeService.getPerfumeById(id);
+
+        return ResponseEntity.ok(
+                Response.<PerfumeDetailDTO>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfume.retrieved")
+                        .data(perfumeDetail)
+                        .build()
+        );
     }
 
     @GetMapping("/search")
     public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> searchPerfumes(
-            @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam String keyword
     ){
-        return ResponseEntity.ok(publicPerfumeService.searchPerfumes(keyword, page, size));
+        PageResponse<PerfumeCardDTO> pageResponse = publicPerfumeService.searchPerfumes(page, size, keyword);
+
+        return ResponseEntity.ok(
+                Response.<PageResponse<PerfumeCardDTO>>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfumes.search.retrieved")
+                        .data(pageResponse)
+                        .build()
+        );
     }
 
     @GetMapping("/{perfumeId}/images/{imageId}")

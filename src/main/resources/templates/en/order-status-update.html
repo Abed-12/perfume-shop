@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order Status Update - Perfume Shop</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #f5f1ed 0%, #e8dfd6 100%);
+                direction: ltr;
+                min-height: 100vh;
+                padding: 10px;
+            }
+            .container {
+                max-width: 600px;
+                margin: 20px auto;
+                background: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 8px 24px rgba(139, 69, 19, 0.1);
+            }
+            .header {
+                background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+                padding: 25px 20px;
+                text-align: center;
+            }
+            .logo {
+                font-size: 40px;
+                margin-bottom: 8px;
+            }
+            .brand {
+                color: #d4af37;
+                font-size: 22px;
+                font-weight: bold;
+                margin: 0;
+                letter-spacing: 1.5px;
+            }
+            .content {
+                padding: 30px 20px;
+                text-align: center;
+            }
+            .status-icon {
+                font-size: 50px;
+                margin: 0 auto 20px;
+            }
+            h1 {
+                font-size: 22px;
+                margin: 0 0 18px 0;
+                line-height: 1.4;
+            }
+            .greeting {
+                font-size: 17px;
+                color: #333;
+                margin-bottom: 18px;
+            }
+            .message {
+                font-size: 15px;
+                color: #555;
+                line-height: 1.7;
+                margin-bottom: 20px;
+            }
+            .status-badge {
+                color: white;
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                display: inline-block;
+                margin: 15px 0;
+            }
+            .divider {
+                height: 2px;
+                background: linear-gradient(to right, transparent, #d4af37, transparent);
+                margin: 25px 0;
+            }
+            .order-info {
+                background: #f8f9fa;
+                padding: 18px 15px;
+                margin: 20px 0;
+                text-align: left;
+                border-radius: 8px;
+            }
+            .order-info p {
+                margin: 8px 0;
+                color: #555;
+                font-size: 14px;
+            }
+            .order-info strong {
+                color: #8b4513;
+            }
+            .reason-box {
+                background: #fff3e0;
+                border-left: 4px solid #ff9800;
+                padding: 18px 15px;
+                margin: 20px 0;
+                text-align: left;
+            }
+            .reason-box p {
+                margin: 0;
+                color: #e65100;
+                font-size: 14px;
+                line-height: 1.8;
+            }
+            .reason-box strong {
+                display: block;
+                margin-bottom: 10px;
+                color: #ff6f00;
+            }
+            a.button {
+                display: inline-block;
+                margin: 20px auto;
+                padding: 14px 35px;
+                background: linear-gradient(135deg, #d4a373 0%, #b8956a 100%);
+                color: #fff;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                box-shadow: 0 4px 15px rgba(212, 163, 115, 0.3);
+                transition: transform 0.2s;
+            }
+            a.button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(212, 163, 115, 0.4);
+            }
+            .footer {
+                background: #2c2c2c;
+                padding: 20px 15px;
+                text-align: center;
+            }
+            .footer-content {
+                color: #d4af37;
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            .copyright {
+                color: #999;
+                font-size: 11px;
+                margin-top: 12px;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🌸</div>
+                <h2 class="brand">Perfume Shop</h2>
+            </div>
+
+            <div class="content">
+                <div th:if="${newStatus == 'PROCESSING'}" class="status-icon" style="color: #2196F3; text-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);">⚙️</div>
+                <div th:if="${newStatus == 'DELIVERED'}" class="status-icon" style="color: #4caf50; text-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);">✓</div>
+                <div th:if="${newStatus == 'CANCELLED'}" class="status-icon" style="color: #f44336; text-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);">❌</div>
+
+                <h1 th:style="${newStatus == 'PROCESSING'} ? 'color: #1976D2;' : (${newStatus == 'DELIVERED'} ? 'color: #2e7d32;' : 'color: #d32f2f;')">Your Order Status Update</h1>
+
+                <p class="greeting">Hello <strong th:text="${name}"></strong></p>
+
+                <p class="message">
+                    We would like to inform you that your order status has been updated
+                </p>
+
+                <div class="status-badge"
+                     th:style="${newStatus == 'PROCESSING'} ? 'background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); box-shadow: 0 3px 10px rgba(33, 150, 243, 0.3);' :
+                                           (${newStatus == 'DELIVERED'} ? 'background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);' :
+                                           'background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); box-shadow: 0 3px 10px rgba(244, 67, 54, 0.3);')"
+                     th:text="${newStatus}"></div>
+
+                <div class="divider"></div>
+
+                <div class="order-info">
+                    <p><strong>Order Number:</strong> <span th:text="${orderNumber}"></span></p>
+                    <p><strong>Order Date:</strong> <span th:text="${#temporals.format(orderDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                    <p><strong>Total Price:</strong> <span th:text="${totalPrice}"></span> JOD</p>
+                    <p th:if="${deliveredAt != null}"><strong>Delivery Date:</strong> <span th:text="${#temporals.format(deliveredAt, 'dd/MM/yyyy HH:mm')}"></span></p>
+                    <p th:if="${cancelledAt != null}"><strong>Cancellation Date:</strong> <span th:text="${#temporals.format(cancelledAt, 'dd/MM/yyyy HH:mm')}"></span></p>
+                </div>
+
+                <div th:if="${cancellationReason != null and !#strings.isEmpty(cancellationReason)}" class="reason-box">
+                    <p>
+                        <strong>Cancellation Reason:</strong>
+                        <span th:text="${cancellationReason}"></span>
+                    </p>
+                </div>
+
+                <a th:href="${trackingLink}" class="button">View Order Details 📋</a>
+
+                <div class="divider"></div>
+
+                <p class="message" style="font-size: 13px; color: #666;">
+                    If you have any questions, don't hesitate to contact us
+                </p>
+
+                <p class="message">
+                    <strong>Perfume Shop</strong> 🌸
+                </p>
+            </div>
+
+            <div class="footer">
+                <p class="footer-content">
+                    <strong>Perfume Shop</strong> - Your Distinguished Perfumes
+                </p>
+                <p class="copyright">
+                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br />
+                    All Rights Reserved
+                </p>
+            </div>
+        </div>
+    </body>
+</html>

@@ -39,9 +39,6 @@ public class GuestOrder {
     @Column(nullable = false)
     private String address;
 
-    @Column(nullable = false, unique = true, updatable = false)
-    private String trackingToken;
-
     @ManyToOne
     private Customer claimedByCustomer;
 

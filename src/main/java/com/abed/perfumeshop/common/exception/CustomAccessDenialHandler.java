@@ -28,7 +28,7 @@ public class CustomAccessDenialHandler implements AccessDeniedHandler {
                        HttpServletResponse response,
                        @NonNull AccessDeniedException accessDeniedException
             ) throws IOException, ServletException {
-        Response<?> errorResponse = Response.builder()
+        Response<Void> errorResponse = Response.<Void>builder()
                 .statusCode(HttpStatus.FORBIDDEN.value())
                 .message(messageSource.getMessage("auth.access.denied", null, LocaleContextHolder.getLocale()))
                 .build();

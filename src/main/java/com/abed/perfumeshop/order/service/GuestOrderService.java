@@ -1,14 +1,16 @@
 package com.abed.perfumeshop.order.service;
 
-import com.abed.perfumeshop.common.res.Response;
+import com.abed.perfumeshop.order.dto.CancelGuestOrderRequest;
 import com.abed.perfumeshop.order.dto.CreateGuestOrderRequest;
 import com.abed.perfumeshop.order.dto.GuestOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.GuestOrderResponseDTO;
+import com.abed.perfumeshop.order.dto.OrderResponseDTO;
 
 public interface GuestOrderService {
 
-    Response<GuestOrderResponseDTO> createGuestOrder(CreateGuestOrderRequest createGuestOrderRequest);
+    OrderResponseDTO createGuestOrder(CreateGuestOrderRequest createGuestOrderRequest);
 
-    Response<GuestOrderDetailDTO> getGuestOrderByToken(String trackingToken);
+    GuestOrderDetailDTO getGuestOrderByEmailAndOrderNumber(String email, String orderNumber);
+
+    void cancelOrder(String orderNumber, CancelGuestOrderRequest cancelGuestOrderRequest);
 
 }

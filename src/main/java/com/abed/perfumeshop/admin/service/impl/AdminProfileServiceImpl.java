@@ -10,13 +10,11 @@ import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
-import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.notification.dto.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,24 +32,19 @@ public class AdminProfileServiceImpl implements AdminProfileService {
     private final MessageSource messageSource;
 
     @Override
-    public Response<AdminDTO> getMyProfile() {
+    public AdminDTO getMyProfile() {
         Admin admin = adminHelper.getCurrentLoggedInUser();
-        AdminDTO adminDTO = AdminDTO.builder()
+
+        return AdminDTO.builder()
                 .id(admin.getId())
                 .firstName(admin.getFirstName())
                 .lastName(admin.getLastName())
                 .email(admin.getEmail())
                 .build();
-
-        return Response.<AdminDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("user.retrieved")
-                .data(adminDTO)
-                .build();
     }
 
     @Override
-    public Response<?> updateMyProfile(AdminUpdateRequest adminUpdateRequest) {
+    public void updateMyProfile(AdminUpdateRequest adminUpdateRequest) {
         Admin admin = adminHelper.getCurrentLoggedInUser();
 
         if (adminRepo.existsByEmailAndIdNot(adminUpdateRequest.getEmail(), admin.getId())) {
@@ -63,15 +56,10 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         admin.setEmail(adminUpdateRequest.getEmail());
 
         adminRepo.save(admin);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("user.profile.updated")
-                .build();
     }
 
     @Override
-    public Response<?> updatePassword(UpdatePasswordRequest updatePasswordRequest) {
+    public void updatePassword(UpdatePasswordRequest updatePasswordRequest) {
         Admin admin = adminHelper.getCurrentLoggedInUser();
 
         String newPassword = updatePasswordRequest.getNewPassword();
@@ -93,17 +81,12 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.changed.subject", null, LocaleContextHolder.getLocale()))
-                .templateName("password-change")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-change")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("auth.password.changed.success")
-                .build();
+        notificationSenderFacade.send(notificationDTO);
     }
 
 }

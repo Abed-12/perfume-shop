@@ -38,13 +38,13 @@ public class GlobalExceptionHandler {
             OutOfStockException.class,
             ValidationException.class
     })
-    public ResponseEntity<Response<?>> handleBusinessException(BaseException ex) {
+    public ResponseEntity<Response<Void>> handleBusinessException(BaseException ex) {
         return buildResponse(ex.getHttpStatus(), ex.getMessageKey(), ex.getArgs());
     }
 
     // ============= Validation Exceptions =============
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Response<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Response<Map<String, String>>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
                 ));
 
         return new ResponseEntity<>(
-                Response.builder()
+                Response.<Map<String, String>>builder()
                         .statusCode(HttpStatus.BAD_REQUEST.value())
                         .message(messageSource.getMessage("validation.failed", null, LocaleContextHolder.getLocale()))
                         .data(errors)
@@ -66,52 +66,52 @@ public class GlobalExceptionHandler {
 
     // ============= HTTP Protocol Exceptions =============
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Response<?>> handleBodyMissing(HttpMessageNotReadableException ex) {
+    public ResponseEntity<Response<Void>> handleBodyMissing(HttpMessageNotReadableException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "request.data.invalid", null);
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<Response<?>> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
+    public ResponseEntity<Response<Void>> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
         return buildResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "media.type.not.supported", null);
     }
 
     // ============= Security Exceptions =============
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Response<?>> handleBadCredentialsException(BadCredentialsException ex) {
+    public ResponseEntity<Response<Void>> handleBadCredentialsException(BadCredentialsException ex) {
         return buildResponse(HttpStatus.UNAUTHORIZED, "exception.invalid.credentials", null);
     }
 
     // ============= Multipart/File Upload Exceptions =============
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Response<?>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+    public ResponseEntity<Response<Void>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         return buildResponse(HttpStatus.CONTENT_TOO_LARGE, "file.size.limit.exceeded", null);
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<Response<?>> handleMissingPart(MissingServletRequestPartException ex) {
+    public ResponseEntity<Response<Void>> handleMissingPart(MissingServletRequestPartException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "error.missing.part", new Object[]{ex.getRequestPartName()});
     }
 
     @ExceptionHandler(MultipartException.class)
-    public ResponseEntity<Response<?>> handleMultipartException(MultipartException ex) {
+    public ResponseEntity<Response<Void>> handleMultipartException(MultipartException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "error.multipart.invalid", null);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<Response<?>> handleMissingRequestParameter(MissingServletRequestParameterException ex) {
+    public ResponseEntity<Response<Void>> handleMissingRequestParameter(MissingServletRequestParameterException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "request.parameter.required", new Object[]{ex.getParameterName()});
     }
 
     // ============= Catch-All Exception =============
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Response<?>> handleAllUnknownException(Exception ex) {
+    public ResponseEntity<Response<Void>> handleAllUnknownException(Exception ex) {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "error.internal.server", null);
     }
 
-    // ============= Helper Methods =============
-    private ResponseEntity<Response<?>> buildResponse(HttpStatus status, String messageKey, Object[] args) {
+    // ============= Private Helper Methods =============
+    private ResponseEntity<Response<Void>> buildResponse(HttpStatus status, String messageKey, Object[] args) {
         return ResponseEntity.status(status)
-                .body(Response.builder()
+                .body(Response.<Void>builder()
                     .statusCode(status.value())
                     .message(messageSource.getMessage(
                             messageKey,

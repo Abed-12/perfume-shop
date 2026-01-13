@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class GuestOrderResponseDTO {
+public class OrderResponseDTO {
 
-    private String trackingToken;
+    private String orderNumber;
 
 }

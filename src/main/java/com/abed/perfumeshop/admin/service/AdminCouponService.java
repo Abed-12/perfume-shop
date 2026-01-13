@@ -2,14 +2,13 @@ package com.abed.perfumeshop.admin.service;
 
 import com.abed.perfumeshop.coupon.dto.CouponRequest;
 import com.abed.perfumeshop.coupon.dto.CouponResponse;
-import com.abed.perfumeshop.common.res.Response;
 
 public interface AdminCouponService {
 
-    Response<?> createCoupon(CouponRequest couponRequest);
+    void createCoupon(CouponRequest couponRequest);
 
-    Response<?> deactivateCoupon();
+    CouponResponse getActiveCoupon();
 
-    Response<CouponResponse> getActiveCoupon();
+    void deactivateCoupon();
 
 }

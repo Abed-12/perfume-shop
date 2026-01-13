@@ -18,19 +18,41 @@ public class AdminCouponController {
     private final AdminCouponService adminCouponService;
 
     @PostMapping
-    public ResponseEntity<Response<?>> createCoupon(@RequestBody @Valid CouponRequest couponRequest) {
+    public ResponseEntity<Response<Void>> createCoupon(@RequestBody @Valid CouponRequest couponRequest) {
+        adminCouponService.createCoupon(couponRequest);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(adminCouponService.createCoupon(couponRequest));
+                .body(
+                        Response.<Void>builder()
+                                .statusCode(HttpStatus.CREATED.value())
+                                .message("coupon.created.success")
+                                .build()
+                );
     }
 
     @GetMapping("/active")
     public ResponseEntity<Response<CouponResponse>> getActiveCoupon(){
-        return ResponseEntity.ok(adminCouponService.getActiveCoupon());
+        CouponResponse couponResponse = adminCouponService.getActiveCoupon();
+
+        return ResponseEntity.ok(
+                Response.<CouponResponse>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("coupon.retrieved.success")
+                        .data(couponResponse)
+                        .build()
+        );
     }
 
     @PatchMapping("/deactivate")
-    public ResponseEntity<Response<?>> deactivateCoupon() {
-        return ResponseEntity.ok(adminCouponService.deactivateCoupon());
+    public ResponseEntity<Response<Void>> deactivateCoupon() {
+        adminCouponService.deactivateCoupon();
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("coupon.deactivated.success")
+                        .build()
+        );
     }
 
 }

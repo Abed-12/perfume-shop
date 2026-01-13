@@ -10,7 +10,6 @@ import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.enums.UserType;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.notification.dto.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.passwordResetCode.entity.PasswordResetCode;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,7 +45,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private String resetLink;
 
     @Override
-    public Response<LoginResponse> login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
@@ -60,20 +58,14 @@ public class AdminAuthServiceImpl implements AdminAuthService {
 
         String token = jwtService.generateToken(admin.getEmail(), UserType.ADMIN.name());
 
-        LoginResponse loginResponse = LoginResponse.builder()
+        return LoginResponse.builder()
                 .token(token)
-                .build();
-
-        return Response.<LoginResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("auth.login.success")
-                .data(loginResponse)
                 .build();
     }
 
     @Override
     @Transactional
-    public Response<?> forgotPassword(String email) {
+    public void forgotPassword(String email) {
         Admin admin = adminRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("user.not.found"));
         passwordResetCodeRepo.deleteByUserIdAndUserType(admin.getId(), UserType.ADMIN);
@@ -97,22 +89,17 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.reset.subject", null, LocaleContextHolder.getLocale()))
-                .templateName("password-reset")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-reset")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("notification.password.reset.sent")
-                .build();
+        notificationSenderFacade.send(notificationDTO);
     }
 
     @Override
     @Transactional
-    public Response<?> resetPassword(PasswordResetRequest passwordResetRequest) {
+    public void resetPassword(PasswordResetRequest passwordResetRequest) {
         String code = passwordResetRequest.getCode();
         String newPassword = passwordResetRequest.getNewPassword();
 
@@ -143,17 +130,12 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         NotificationDTO confirmationEmail = NotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.update", null, LocaleContextHolder.getLocale()))
-                .templateName("password-update-confirmation")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-update-confirmation")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(confirmationEmail, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("notification.password.update")
-                .build();
+        notificationSenderFacade.send(confirmationEmail);
     }
 
 }

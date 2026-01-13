@@ -26,50 +26,93 @@ public class AdminPerfumeController {
     public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> getAllPerfumes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
-    ){
-        return ResponseEntity.ok(adminPerfumeService.getAllPerfumes(page, size));
+    ) {
+        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.getAllPerfumes(page, size);
+
+        return ResponseEntity.ok(
+                Response.<PageResponse<AdminPerfumeCardDTO>>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfumes.retrieved")
+                        .data(pageResponse)
+                        .build()
+        );
     }
 
     @PostMapping
-    public ResponseEntity<Response<?>> createPerfume(
+    public ResponseEntity<Response<Void>> createPerfume(
             @RequestPart @Valid CreatePerfumeRequest createPerfumeRequest,
             @RequestPart List<MultipartFile> images,
             @RequestParam Integer primaryImageIndex,
             @RequestParam List<Integer> imageOrder
     ) {
+        adminPerfumeService.createPerfume(createPerfumeRequest, images, primaryImageIndex, imageOrder);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(adminPerfumeService.createPerfume(createPerfumeRequest, images, primaryImageIndex, imageOrder));
+                .body(
+                        Response.<Void>builder()
+                                .statusCode(HttpStatus.CREATED.value())
+                                .message("perfume.created")
+                                .build()
+                );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Response<?>> updatePerfume(
+    public ResponseEntity<Response<Void>> updatePerfume(
             @PathVariable Long id,
             @RequestBody @Valid UpdatePerfumeRequest updatePerfumeRequest
     ) {
-        return ResponseEntity.ok(adminPerfumeService.updatePerfume(id, updatePerfumeRequest));
+        adminPerfumeService.updatePerfume(id, updatePerfumeRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfume.updated")
+                        .build()
+        );
     }
 
     @PostMapping("/{perfumeId}/images")
-    public ResponseEntity<Response<?>> addPerfumeImage(
+    public ResponseEntity<Response<Void>> addPerfumeImage(
             @PathVariable Long perfumeId,
             @RequestPart MultipartFile image,
             @RequestParam(defaultValue = "false") Boolean isPrimary
     ) {
-        return ResponseEntity.ok(adminPerfumeService.addPerfumeImage(perfumeId, image, isPrimary));
+        adminPerfumeService.addPerfumeImage(perfumeId, image, isPrimary);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("image.added.successfully")
+                        .build()
+        );
     }
 
     @PutMapping("/{perfumeId}/images/{imageId}")
-    public ResponseEntity<Response<?>> updatePerfumeImage(
+    public ResponseEntity<Response<Void>> updatePerfumeImage(
             @PathVariable Long perfumeId,
             @PathVariable Long imageId,
             @RequestPart MultipartFile image
     ){
-        return ResponseEntity.ok(adminPerfumeService.updatePerfumeImage(perfumeId, imageId, image));
+        adminPerfumeService.updatePerfumeImage(perfumeId, imageId, image);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("image.updated.successfully")
+                        .build()
+        );
     }
 
     @DeleteMapping("/{perfumeId}/images/{imageId}")
-    public ResponseEntity<Response<?>> deletePerfumeImage(@PathVariable Long perfumeId, @PathVariable Long imageId){
-        return ResponseEntity.ok(adminPerfumeService.deletePerfumeImage(perfumeId, imageId));
+    public ResponseEntity<Response<Void>> deletePerfumeImage(@PathVariable Long perfumeId, @PathVariable Long imageId){
+        adminPerfumeService.deletePerfumeImage(perfumeId, imageId);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("image.deleted.successfully")
+                        .build()
+        );
     }
 
 }

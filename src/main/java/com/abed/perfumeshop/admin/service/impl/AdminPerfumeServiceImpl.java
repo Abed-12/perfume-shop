@@ -7,12 +7,10 @@ import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.admin.service.AdminPerfumeService;
 import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.exception.*;
-import com.abed.perfumeshop.common.res.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,14 +36,14 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Response<PageResponse<AdminPerfumeCardDTO>> getAllPerfumes(int page, int size) {
+    public PageResponse<AdminPerfumeCardDTO> getAllPerfumes(int page, int size) {
         Page<Perfume> perfumesPage = perfumeRepo.findAll(PageRequest.of(page, size));
-        return buildAdminPerfumeCardResponse(perfumesPage, "perfumes.retrieved");
+        return buildAdminPerfumeCardResponse(perfumesPage);
     }
 
     @Override
     @Transactional
-    public Response<?> createPerfume(
+    public void createPerfume(
             CreatePerfumeRequest createPerfumeRequest,
             List<MultipartFile> images,
             Integer primaryImageIndex,
@@ -105,17 +103,13 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             );
             perfumeImages.add(perfumeImage);
         }
-        perfumeImageRepo.saveAll(perfumeImages);
 
-        return Response.builder()
-                .statusCode(HttpStatus.CREATED.value())
-                .message("perfume.created")
-                .build();
+        perfumeImageRepo.saveAll(perfumeImages);
     }
 
     @Override
     @Transactional
-    public Response<?> updatePerfume(Long id, UpdatePerfumeRequest updatePerfumeRequest) {
+    public void updatePerfume(Long id, UpdatePerfumeRequest updatePerfumeRequest) {
         adminHelper.getCurrentLoggedInUser();
 
         Perfume perfume = perfumeRepo.findById(id)
@@ -198,16 +192,11 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
         itemRepo.save(item);
         perfumeRepo.save(perfume);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("perfume.updated")
-                .build();
     }
 
     @Override
     @Transactional
-    public Response<?> addPerfumeImage(
+    public void addPerfumeImage(
             Long perfumeId,
             MultipartFile image,
             Boolean isPrimary
@@ -244,17 +233,13 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                 isPrimary,
                 newDisplayOrder
         );
-        perfumeImageRepo.save(perfumeImage);
 
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("image.added.successfully")
-                .build();
+        perfumeImageRepo.save(perfumeImage);
     }
 
     @Override
     @Transactional
-    public Response<?> updatePerfumeImage(
+    public void updatePerfumeImage(
             Long perfumeId,
             Long imageId,
             MultipartFile image
@@ -282,16 +267,11 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                     new Object[]{image.getOriginalFilename()}
             );
         }
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("image.updated.successfully")
-                .build();
     }
 
     @Override
     @Transactional
-    public Response<?> deletePerfumeImage(Long perfumeId, Long imageId) {
+    public void deletePerfumeImage(Long perfumeId, Long imageId) {
         adminHelper.getCurrentLoggedInUser();
 
         PerfumeImage perfumeImage = perfumeImageRepo.findByIdAndPerfumeId(imageId, perfumeId)
@@ -302,15 +282,10 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
         }
 
         perfumeImageRepo.delete(perfumeImage);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("image.deleted.successfully")
-                .build();
     }
 
     // ========== Private Helper Methods ==========
-    private Response<PageResponse<AdminPerfumeCardDTO>> buildAdminPerfumeCardResponse(Page<Perfume> perfumesPage, String message) {
+    private PageResponse<AdminPerfumeCardDTO> buildAdminPerfumeCardResponse(Page<Perfume> perfumesPage) {
         List<Perfume> perfumes = perfumesPage.getContent();
 
         List<Long> perfumeIds = perfumes.stream()
@@ -355,7 +330,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                 ))
                 .toList();
 
-        PageResponse<AdminPerfumeCardDTO> pageResponse = PageResponse.<AdminPerfumeCardDTO>builder()
+        return PageResponse.<AdminPerfumeCardDTO>builder()
                 .content(perfumeCards)
                 .page(PageResponse.PageInfo.builder()
                         .size(perfumesPage.getSize())
@@ -363,12 +338,6 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                         .totalElements(perfumesPage.getTotalElements())
                         .totalPages(perfumesPage.getTotalPages())
                         .build())
-                .build();
-
-        return Response.<PageResponse<AdminPerfumeCardDTO>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message(message)
-                .data(pageResponse)
                 .build();
     }
 

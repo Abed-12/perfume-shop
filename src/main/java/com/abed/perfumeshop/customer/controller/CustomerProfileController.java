@@ -7,6 +7,7 @@ import com.abed.perfumeshop.customer.dto.CustomerUpdateRequest;
 import com.abed.perfumeshop.customer.service.CustomerProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,17 +20,39 @@ public class CustomerProfileController {
 
     @GetMapping
     public ResponseEntity<Response<CustomerDTO>> getMyProfile(){
-        return ResponseEntity.ok(customerProfileService.getMyProfile());
+        CustomerDTO customerDTO = customerProfileService.getMyProfile();
+
+        return ResponseEntity.ok(
+                Response.<CustomerDTO>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("user.retrieved")
+                        .data(customerDTO)
+                        .build()
+        );
     }
 
     @PutMapping
-    public ResponseEntity<Response<?>> updateMyProfile(@RequestBody @Valid CustomerUpdateRequest customerUpdateRequest){
-        return ResponseEntity.ok(customerProfileService.updateMyProfile(customerUpdateRequest));
+    public ResponseEntity<Response<Void>> updateMyProfile(@RequestBody @Valid CustomerUpdateRequest customerUpdateRequest){
+        customerProfileService.updateMyProfile(customerUpdateRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("user.profile.updated")
+                        .build()
+        );
     }
 
     @PutMapping("/update-password")
-    public ResponseEntity<Response<?>> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest){
-        return ResponseEntity.ok(customerProfileService.updatePassword(updatePasswordRequest));
+    public ResponseEntity<Response<Void>> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest){
+        customerProfileService.updatePassword(updatePasswordRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("auth.password.changed.success")
+                        .build()
+        );
     }
 
 }

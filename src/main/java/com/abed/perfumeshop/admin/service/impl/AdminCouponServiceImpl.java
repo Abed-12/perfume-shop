@@ -10,9 +10,7 @@ import com.abed.perfumeshop.coupon.dto.CouponResponse;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.coupon.repo.CouponRepo;
 import com.abed.perfumeshop.admin.service.AdminCouponService;
-import com.abed.perfumeshop.common.res.Response;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,10 +23,10 @@ public class AdminCouponServiceImpl implements AdminCouponService {
     private final EnumLocalizationService enumLocalizationService;
 
     @Override
-    public Response<?> createCoupon(CouponRequest couponRequest) {
+    public void createCoupon(CouponRequest couponRequest) {
         Admin admin = adminHelper.getCurrentLoggedInUser();
 
-        couponRepo.findByActive(true)
+        couponRepo.findByActiveTrue()
                 .ifPresent(c -> {
                     throw new IllegalStateException("coupon.active.already.exists");
                 });
@@ -40,28 +38,24 @@ public class AdminCouponServiceImpl implements AdminCouponService {
                 .discountType(couponRequest.getDiscountType())
                 .discountValue(couponRequest.getDiscountValue())
                 .expiryDate(couponRequest.getExpiryDate())
+                .maxUsage(couponRequest.getMaxUsage())
                 .createdBy(admin)
                 .build();
 
         couponRepo.save(coupon);
 
-        // Send email or push
+        // Send email to customer and guest
 
-
-        return Response.builder()
-                .statusCode(HttpStatus.CREATED.value())
-                .message("coupon.created.success")
-                .build();
     }
 
     @Override
-    public Response<CouponResponse> getActiveCoupon() {
+    public CouponResponse getActiveCoupon() {
         adminHelper.getCurrentLoggedInUser();
 
-        Coupon coupon = couponRepo.findByActive(true)
+        Coupon coupon = couponRepo.findByActiveTrue()
                 .orElseThrow(() -> new NotFoundException("coupon.not.found.active"));
 
-        CouponResponse couponResponse = CouponResponse.builder()
+        return CouponResponse.builder()
                 .id(coupon.getId())
                 .code(coupon.getCode())
                 .discountType(enumLocalizationService.getLocalizedName(coupon.getDiscountType()))
@@ -71,28 +65,17 @@ public class AdminCouponServiceImpl implements AdminCouponService {
                 .usageCount(coupon.getUsageCount())
                 .maxUsage(coupon.getMaxUsage())
                 .build();
-
-        return Response.<CouponResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("coupon.retrieved.success")
-                .data(couponResponse)
-                .build();
     }
 
     @Override
-    public Response<?> deactivateCoupon() {
+    public void deactivateCoupon() {
         adminHelper.getCurrentLoggedInUser();
 
-        Coupon coupon = couponRepo.findByActive(true)
+        Coupon coupon = couponRepo.findByActiveTrue()
                 .orElseThrow(() -> new NotFoundException("coupon.not.found.active"));
 
         coupon.setActive(false);
         couponRepo.save(coupon);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("coupon.deactivated.success")
-                .build();
     }
 
 }

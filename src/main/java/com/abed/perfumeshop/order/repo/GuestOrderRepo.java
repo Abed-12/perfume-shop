@@ -1,7 +1,13 @@
 package com.abed.perfumeshop.order.repo;
 
+import com.abed.perfumeshop.common.enums.OrderStatus;
+import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.order.entity.GuestOrder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,6 +18,18 @@ public interface GuestOrderRepo extends JpaRepository<GuestOrder, Long> {
 
     List<GuestOrder> findByEmailAndClaimedByCustomerIsNull(String email);
 
-    Optional<GuestOrder> findByTrackingToken(String trackingToken);
+    Optional<GuestOrder> findByEmailAndOrder_OrderNumber(String email, String orderNumber);
+
+    Optional<GuestOrder> findByOrder_OrderNumber(String orderNumber);
+
+    @Query("SELECT go FROM GuestOrder go " +
+            "WHERE go.claimedByCustomer = :customer " +
+            "AND (:status IS NULL OR go.order.status = :status)")
+    List<GuestOrder> findByClaimedCustomerAndStatusOrAll(@Param("customer") Customer customer, @Param("status") OrderStatus status);
+
+    @Query("SELECT go FROM GuestOrder go " +
+            "WHERE (:status IS NULL OR go.order.status = :status) " +
+            "ORDER BY go.order.orderDate DESC")
+    Page<GuestOrder> findByStatusOrAll(@Param("status") OrderStatus status, Pageable pageable);
 
 }

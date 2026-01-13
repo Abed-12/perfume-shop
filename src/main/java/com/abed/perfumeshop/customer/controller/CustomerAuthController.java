@@ -24,24 +24,54 @@ public class CustomerAuthController {
     private final CustomerAuthService customerAuthService;
 
     @PostMapping("/register")
-    public ResponseEntity<Response<?>> register(@RequestBody @Valid CustomerRegisterRequest customerRegisterRequest){
-        return ResponseEntity.ok(customerAuthService.register(customerRegisterRequest));
+    public ResponseEntity<Response<Void>> register(@RequestBody @Valid CustomerRegisterRequest customerRegisterRequest) {
+        customerAuthService.register(customerRegisterRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(
+                        Response.<Void>builder()
+                                .statusCode(HttpStatus.CREATED.value())
+                                .message("auth.registration.success")
+                                .build()
+                );
     }
 
     @PostMapping("/login")
     public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequest loginRequest){
-        return ResponseEntity.ok(customerAuthService.login(loginRequest));
+        LoginResponse loginResponse = customerAuthService.login(loginRequest);
+
+        return ResponseEntity.ok(
+                Response.<LoginResponse>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("auth.login.success")
+                        .data(loginResponse)
+                        .build()
+        );
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<Response<?>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest forgotPasswordRequest){
+    public ResponseEntity<Response<Void>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest forgotPasswordRequest){
+        customerAuthService.forgotPassword(forgotPasswordRequest.getEmail());
+
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(customerAuthService.forgotPassword(forgotPasswordRequest.getEmail()));
+                .body(
+                        Response.<Void>builder()
+                                .statusCode(HttpStatus.ACCEPTED.value())
+                                .message("notification.password.reset.sent")
+                                .build()
+                );
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<Response<?>> resetPassword(@RequestBody @Valid PasswordResetRequest passwordResetRequest){
-        return ResponseEntity.ok(customerAuthService.resetPassword(passwordResetRequest));
+    public ResponseEntity<Response<Void>> resetPassword(@RequestBody @Valid PasswordResetRequest passwordResetRequest){
+        customerAuthService.resetPassword(passwordResetRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("notification.password.update")
+                        .build()
+        );
     }
 
 }

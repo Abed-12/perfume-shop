@@ -5,7 +5,6 @@ import com.abed.perfumeshop.notification.dto.NotificationDTO;
 import com.abed.perfumeshop.notification.entity.Notification;
 import com.abed.perfumeshop.notification.repo.NotificationRepo;
 import com.abed.perfumeshop.notification.service.NotificationSender;
-import com.abed.perfumeshop.order.entity.Order;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,7 @@ public class EmailNotificationSender implements NotificationSender {
 
     @Override
     @Async
-    public void send(NotificationDTO notificationDTO, Order order) {
+    public void send(NotificationDTO notificationDTO) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(
@@ -61,7 +60,8 @@ public class EmailNotificationSender implements NotificationSender {
                     .recipient(notificationDTO.getRecipient())
                     .body(notificationDTO.getBody())
                     .type(NotificationType.EMAIL)
-                    .order(order)
+                    .order(notificationDTO.getOrder())
+                    .coupon(notificationDTO.getCoupon())
                     .build();
 
             notificationRepo.save(notificationToSave);

@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.order.entity;
 
+import com.abed.perfumeshop.common.enums.Governorate;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.customer.entity.Customer;
 import jakarta.persistence.*;
@@ -12,14 +13,26 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@Table(name = "authenticated_orders")
+@Table(name = "customer_orders")
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticatedOrder {
+public class CustomerOrder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Governorate governorate;
+
+    @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false)
+    private String phoneNumber;
+
+    private String alternativePhoneNumber;
 
     @OneToOne(optional = false)
     @JoinColumn(nullable = false, unique = true, updatable = false)

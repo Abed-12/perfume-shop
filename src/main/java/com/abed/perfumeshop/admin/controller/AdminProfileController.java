@@ -7,6 +7,7 @@ import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.res.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,17 +20,39 @@ public class AdminProfileController {
 
     @GetMapping
     public ResponseEntity<Response<AdminDTO>> getMyProfile(){
-        return ResponseEntity.ok(adminProfileService.getMyProfile());
+        AdminDTO adminDTO = adminProfileService.getMyProfile();
+
+        return ResponseEntity.ok(
+                Response.<AdminDTO>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("user.retrieved")
+                        .data(adminDTO)
+                        .build()
+        );
     }
 
     @PutMapping
-    public ResponseEntity<Response<?>> updateMyProfile(@RequestBody @Valid AdminUpdateRequest adminUpdateRequest){
-        return ResponseEntity.ok(adminProfileService.updateMyProfile(adminUpdateRequest));
+    public ResponseEntity<Response<Void>> updateMyProfile(@RequestBody @Valid AdminUpdateRequest adminUpdateRequest){
+        adminProfileService.updateMyProfile(adminUpdateRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("user.profile.updated")
+                        .build()
+        );
     }
 
     @PutMapping("/update-password")
-    public ResponseEntity<Response<?>> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest){
-        return ResponseEntity.ok(adminProfileService.updatePassword(updatePasswordRequest));
+    public ResponseEntity<Response<Void>> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest){
+        adminProfileService.updatePassword(updatePasswordRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("auth.password.changed.success")
+                        .build()
+        );
     }
 
 }

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ar" dir="rtl">
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Perfume Shop - تم تغيير كلمة المرور</title>
+        <title>Perfume Shop - Welcome</title>
         <style>
             * {
                 margin: 0;
@@ -13,7 +13,7 @@
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background: linear-gradient(135deg, #f5f1ed 0%, #e8dfd6 100%);
-                direction: rtl;
+                direction: ltr;
                 min-height: 100vh;
                 padding: 10px;
             }
@@ -45,14 +45,14 @@
                 padding: 30px 20px;
                 text-align: center;
             }
-            .icon {
+            .welcome-icon {
                 font-size: 50px;
                 margin: 0 auto 20px;
-                color: #f57c00;
-                text-shadow: 0 2px 8px rgba(245, 124, 0, 0.3);
+                color: #d4a373;
+                text-shadow: 0 2px 8px rgba(212, 163, 115, 0.3);
             }
             h1 {
-                color: #d84315;
+                color: #8b6f47;
                 font-size: 22px;
                 margin: 0 0 18px 0;
                 line-height: 1.4;
@@ -70,22 +70,8 @@
             }
             .divider {
                 height: 2px;
-                background: linear-gradient(to left, transparent, #d4af37, transparent);
+                background: linear-gradient(to right, transparent, #d4af37, transparent);
                 margin: 25px 0;
-            }
-            .warning-box {
-                background: #fff3e0;
-                border-right: 4px solid #f57c00;
-                padding: 18px 15px;
-                margin: 20px 0;
-                text-align: right;
-            }
-            .warning-box p {
-                margin: 0;
-                color: #e65100;
-                font-size: 14px;
-                line-height: 1.8;
-                font-weight: 500;
             }
             .footer {
                 background: #2c2c2c;
@@ -113,36 +99,32 @@
             </div>
 
             <div class="content">
-                <div class="icon">⚠️</div>
+                <div class="welcome-icon">👋</div>
 
-                <h1>تم تغيير كلمة المرور</h1>
+                <h1>Welcome to the World of Perfumes</h1>
 
-                <p class="greeting">مرحباً <strong th:text="${name}"></strong></p>
+                <p class="greeting">Hello <strong th:text="${name}"></strong></p>
 
                 <p class="message">
-                    تم تغيير كلمة المرور الخاصة بحسابك بنجاح
+                    We're delighted to have you join the<br />Perfume Shop<br />
+                    family - your destination for luxury and distinguished Perfumes
                 </p>
 
                 <div class="divider"></div>
 
-                <div class="warning-box">
-                    <p>
-                        إذا لم تقم بهذا الإجراء، يرجى <b>إعادة تعيين كلمة المرور فوراً</b> والتواصل مع فريق الدعم
-                    </p>
-                </div>
-
                 <p class="message">
-                    <strong>Perfume Shop</strong> - الأمان أولاً 🔒
+                    Your perfume journey starts here<br />
+                    <strong>🌸 Perfume Shop 🌸</strong>
                 </p>
             </div>
 
             <div class="footer">
                 <p class="footer-content">
-                    <strong>Perfume Shop</strong> - عطورك المميزة
+                    <strong>Perfume Shop</strong> - Your Distinguished Perfumes
                 </p>
                 <p class="copyright">
-                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br/>
-                    جميع الحقوق محفوظة
+                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br />
+                    All Rights Reserved
                 </p>
             </div>
         </div>

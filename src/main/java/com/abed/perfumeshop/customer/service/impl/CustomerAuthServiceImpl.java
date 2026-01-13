@@ -9,7 +9,6 @@ import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.enums.NotificationType;
-import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.customer.dto.CustomerRegisterRequest;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
@@ -27,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,7 +54,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
 
     @Override
     @Transactional
-    public Response<?> register(CustomerRegisterRequest customerRegisterRequest) {
+    public void register(CustomerRegisterRequest customerRegisterRequest) {
         String email = customerRegisterRequest.getEmail();
         if (customerRepo.existsByEmail(email) || adminRepo.existsByEmail(email)) {
             throw new AlreadyExistsException("user.email.already.exists");
@@ -87,27 +85,22 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
         }
 
         // Send welcome email of the user
-        Map<String, Object> vars = new HashMap<>();
-        vars.put("name", customer.getFirstName());
+        Map<String, Object> templateVariables = new HashMap<>();
+        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
 
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.welcome.subject", null, LocaleContextHolder.getLocale()))
-                .templateName("welcome")
-                .templateVariables(vars)
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/welcome")
+                .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.CREATED.value())
-                .message("auth.registration.success")
-                .build();
+        notificationSenderFacade.send(notificationDTO);
     }
 
     @Override
-    public Response<LoginResponse> login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
@@ -120,20 +113,14 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
 
         String token = jwtService.generateToken(customer.getEmail(), UserType.CUSTOMER.name());
 
-        LoginResponse loginResponse = LoginResponse.builder()
+         return LoginResponse.builder()
                 .token(token)
-                .build();
-
-        return Response.<LoginResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("auth.login.success")
-                .data(loginResponse)
                 .build();
     }
 
     @Override
     @Transactional
-    public Response<?> forgotPassword(String email) {
+    public void forgotPassword(String email) {
         Customer customer = customerRepo.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("user.not.found"));
         passwordResetCodeRepo.deleteByUserIdAndUserType(customer.getId(), UserType.CUSTOMER);
@@ -151,28 +138,23 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
 
         // Send email reset link out
         Map<String, Object> templateVariables = new HashMap<>();
-        templateVariables.put("name", customer.getFirstName());
+        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
         templateVariables.put("resetLink", resetLink + code);
 
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.password.reset.subject", null, LocaleContextHolder.getLocale()))
-                .templateName("password-reset")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-reset")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("notification.password.reset.sent")
-                .build();
+        notificationSenderFacade.send(notificationDTO);
     }
 
     @Override
     @Transactional
-    public Response<?> resetPassword(PasswordResetRequest passwordResetRequest) {
+    public void resetPassword(PasswordResetRequest passwordResetRequest) {
         String code = passwordResetRequest.getCode();
         String newPassword = passwordResetRequest.getNewPassword();
 
@@ -198,22 +180,17 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
 
         // Send confirmation email
         Map<String, Object> templateVariables = new HashMap<>();
-        templateVariables.put("name", customer.getFirstName());
+        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
 
         NotificationDTO confirmationEmail = NotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.password.update", null, LocaleContextHolder.getLocale()))
-                .templateName("password-update-confirmation")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-update-confirmation")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(confirmationEmail, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("notification.password.update")
-                .build();
+        notificationSenderFacade.send(confirmationEmail);
     }
 
 }

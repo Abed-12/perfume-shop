@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ar" dir="rtl">
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>شكراً لطلبك - Perfume Shop</title>
+        <title>Thank You for Your Order - Perfume Shop</title>
         <style>
             * {
                 margin: 0;
@@ -13,7 +13,7 @@
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background: linear-gradient(135deg, #f5f1ed 0%, #e8dfd6 100%);
-                direction: rtl;
+                direction: ltr;
                 min-height: 100vh;
                 padding: 10px;
             }
@@ -70,12 +70,12 @@
             }
             .divider {
                 height: 2px;
-                background: linear-gradient(to left, transparent, #d4af37, transparent);
+                background: linear-gradient(to right, transparent, #d4af37, transparent);
                 margin: 25px 0;
             }
             .tracking-box {
                 background: #f8f9fa;
-                border-right: 4px solid #8b4513;
+                border-left: 4px solid #8b4513;
                 padding: 18px 15px;
                 margin: 20px 0;
                 text-align: center;
@@ -86,7 +86,7 @@
                 font-size: 14px;
                 line-height: 1.8;
             }
-            .tracking-token {
+            .order-number {
                 background: #fff3e0;
                 padding: 12px 20px;
                 border-radius: 8px;
@@ -119,7 +119,7 @@
                 background: #f8f9fa;
                 padding: 18px 15px;
                 margin: 20px 0;
-                text-align: right;
+                text-align: left;
                 border-radius: 8px;
             }
             .order-info p {
@@ -158,53 +158,53 @@
             <div class="content">
                 <div class="success-icon">✓</div>
 
-                <h1>تم استلام طلبك بنجاح</h1>
+                <h1>Your Order Has Been Received Successfully</h1>
 
-                <p class="greeting">مرحباً <strong th:text="${name}"></strong></p>
+                <p class="greeting">Hello <strong th:text="${name}"></strong></p>
 
                 <p class="message">
-                    شكراً لطلبك من <br> Perfume Shop ❤️<br>
-                    تم استلام طلبك بنجاح وسيتم معالجته في أقرب وقت ممكن
+                    Thank you for your order from <br /> Perfume Shop ❤️<br />
+                    Your order has been received successfully and will be processed as soon as possible
                 </p>
 
                 <div class="divider"></div>
 
                 <div class="order-info">
-                    <p><strong>رقم الطلب:</strong> <span th:text="${orderId}"></span></p>
-                    <p><strong>تاريخ الطلب:</strong> <span th:text="${#temporals.format(orderDate, 'dd/MM/yyyy HH:mm')}"></span></p>
-                    <p><strong>المبلغ الإجمالي:</strong> <span th:text="${totalPrice}"></span> دينار</p>
+                    <p><strong>Order Number:</strong> <span th:text="${orderNumber}"></span></p>
+                    <p><strong>Order Date:</strong> <span th:text="${#temporals.format(orderDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                    <p><strong>Total Price:</strong> <span th:text="${totalPrice}"></span> JOD</p>
                 </div>
 
                 <div class="tracking-box">
-                    <p><strong>رمز التتبع الخاص بك:</strong></p>
-                    <div class="tracking-token" th:text="${trackingToken}"></div>
+                    <p><strong>Your Order Code:</strong></p>
+                    <div class="order-number" th:text="${orderNumber}"></div>
                     <p style="margin-top: 15px; font-size: 13px; color: #666;">
-                        احتفظ بهذا الرمز - يمكن استعماله في صندوق البحث الموجود بالموقع للوصول إلى فاتورتك
+                        Keep this code - you can use it in the search box on the website to access your invoice
                     </p>
                 </div>
 
-                <a th:href="${trackingLink}" class="button">تتبع طلبك الآن 📦</a>
+                <a th:href="${trackingLink}" class="button">Track Your Order Now 📦</a>
 
                 <div class="divider"></div>
 
                 <p class="message" style="font-size: 13px; color: #666;">
-                    سيتم التواصل معك عند شحن طلبك<br>
-                    يمكنك فقط إلغاء الطلب في حال لم تصل حالة الطلب إلى PROCESSING<br>
-                    إذا كان لديك أي استفسار، لا تتردد في التواصل معنا
+                    We will contact you when your order is shipped<br />
+                    You can only cancel the order if it hasn't reached PROCESSING status<br />
+                    If you have any questions, don't hesitate to contact us
                 </p>
 
                 <p class="message">
-                    شكراً لثقتك بـ <br><strong>Perfume Shop</strong> 🌸
+                    Thank you for trusting <br /><strong>Perfume Shop</strong> 🌸
                 </p>
             </div>
 
             <div class="footer">
                 <p class="footer-content">
-                    <strong>Perfume Shop</strong> - عطورك المميزة
+                    <strong>Perfume Shop</strong> - Your Distinguished Perfumes
                 </p>
                 <p class="copyright">
-                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br/>
-                    جميع الحقوق محفوظة
+                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br />
+                    All Rights Reserved
                 </p>
             </div>
         </div>

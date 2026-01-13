@@ -2,6 +2,7 @@ package com.abed.perfumeshop.coupon.dto;
 
 import com.abed.perfumeshop.common.enums.DiscountType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -28,6 +29,7 @@ public class CouponRequest {
     private BigDecimal discountValue;
 
     @NotNull(message = "{coupon.expiryDate.required}")
+    @Future(message = "{coupon.expiryDate.future}")
     private LocalDateTime expiryDate;
 
     @Min(value = 1, message = "{coupon.maxUsage.min}")

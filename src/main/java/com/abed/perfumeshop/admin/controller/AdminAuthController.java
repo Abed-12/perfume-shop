@@ -23,19 +23,41 @@ public class AdminAuthController {
     private final AdminAuthService adminAuthService;
 
     @PostMapping("/login")
-    public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequest loginRequest){
-        return ResponseEntity.ok(adminAuthService.login(loginRequest));
+    public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequest loginRequest) {
+        LoginResponse loginResponse = adminAuthService.login(loginRequest);
+
+        return ResponseEntity.ok(
+                Response.<LoginResponse>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("auth.login.success")
+                        .data(loginResponse)
+                        .build()
+        );
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<Response<?>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest forgotPasswordRequest){
+    public ResponseEntity<Response<Void>> forgotPassword(@RequestBody @Valid ForgotPasswordRequest forgotPasswordRequest) {
+        adminAuthService.forgotPassword(forgotPasswordRequest.getEmail());
+
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(adminAuthService.forgotPassword(forgotPasswordRequest.getEmail()));
+                .body(
+                        Response.<Void>builder()
+                                .statusCode(HttpStatus.ACCEPTED.value())
+                                .message("notification.password.reset.sent")
+                                .build()
+                );
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<Response<?>> resetPassword(@RequestBody @Valid PasswordResetRequest passwordResetRequest){
-        return ResponseEntity.ok(adminAuthService.resetPassword(passwordResetRequest));
+    public ResponseEntity<Response<Void>> resetPassword(@RequestBody @Valid PasswordResetRequest passwordResetRequest) {
+        adminAuthService.resetPassword(passwordResetRequest);
+
+        return ResponseEntity.ok(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("notification.password.update")
+                        .build()
+        );
     }
 
 }

@@ -11,13 +11,11 @@ import com.abed.perfumeshop.Item.service.PublicPerfumeService;
 import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
-import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,14 +38,15 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Response<PageResponse<PerfumeCardDTO>> getActivePerfumes(int page, int size) {
+    public PageResponse<PerfumeCardDTO> getActivePerfumes(int page, int size) {
         Page<Perfume> perfumesPage = perfumeRepo.findByItem_ActiveTrue(PageRequest.of(page, size));
-        return buildPerfumeCardResponse(perfumesPage, "perfumes.retrieved");
+
+        return buildPerfumeCardResponse(perfumesPage);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Response<PerfumeDetailDTO> getPerfumeById(Long id) {
+    public PerfumeDetailDTO getPerfumeById(Long id) {
         Perfume perfume = perfumeRepo.findById(id)
                 .orElseThrow( () -> new NotFoundException("perfume.not.found"));
 
@@ -78,18 +77,12 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                     detailBuilder.description(translation.getDescription());
                 });
 
-        PerfumeDetailDTO perfumeDetail = detailBuilder.build();
-
-        return Response.<PerfumeDetailDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("perfume.retrieved")
-                .data(perfumeDetail)
-                .build();
+         return detailBuilder.build();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Response<PageResponse<PerfumeCardDTO>> searchPerfumes(String keyword, int page, int size) {
+    public PageResponse<PerfumeCardDTO> searchPerfumes(int page, int size, String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             throw new ValidationException("perfume.search.keyword.required");
         }
@@ -99,7 +92,8 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
         }
 
         Page<Perfume> perfumesPage = perfumeRepo.searchPerfumes(keyword, PageRequest.of(page, size));
-        return buildPerfumeCardResponse(perfumesPage, "perfumes.search.retrieved");
+
+        return buildPerfumeCardResponse(perfumesPage);
     }
 
     @Override
@@ -110,7 +104,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
     }
 
     // ========== Private Helper Methods ==========
-    private Response<PageResponse<PerfumeCardDTO>> buildPerfumeCardResponse(Page<Perfume> perfumesPage, String message) {
+    private PageResponse<PerfumeCardDTO> buildPerfumeCardResponse(Page<Perfume> perfumesPage) {
         List<Perfume> perfumes = perfumesPage.getContent();
 
         List<Long> perfumeIds = perfumes.stream()
@@ -155,7 +149,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                 ))
                 .toList();
 
-        PageResponse<PerfumeCardDTO> pageResponse = PageResponse.<PerfumeCardDTO>builder()
+        return PageResponse.<PerfumeCardDTO>builder()
                 .content(perfumeCards)
                 .page(PageResponse.PageInfo.builder()
                         .size(perfumesPage.getSize())
@@ -163,12 +157,6 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                         .totalElements(perfumesPage.getTotalElements())
                         .totalPages(perfumesPage.getTotalPages())
                         .build())
-                .build();
-
-        return Response.<PageResponse<PerfumeCardDTO>>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message(message)
-                .data(pageResponse)
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.abed.perfumeshop.notification.dto;
 
 import com.abed.perfumeshop.common.enums.NotificationType;
+import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.order.entity.Order;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,6 +31,8 @@ public class NotificationDTO {
     private NotificationType type;
 
     private Order order;
+
+    private Coupon coupon;
 
     // For values/variables to be passed into email template to send
     private String templateName;

@@ -118,7 +118,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Sends error response with localized message
      */
     private void sendErrorResponse(HttpServletResponse response, String messageKey) throws IOException {
-        Response<?> errorResponse = Response.builder()
+        Response<Void> errorResponse = Response.<Void>builder()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .message(messageSource.getMessage(
                         messageKey,

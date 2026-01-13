@@ -4,7 +4,6 @@ import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
-import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.dto.CustomerDTO;
 import com.abed.perfumeshop.customer.dto.CustomerUpdateRequest;
@@ -17,7 +16,6 @@ import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,10 +34,10 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
     private final MessageSource messageSource;
 
     @Override
-    public Response<CustomerDTO> getMyProfile() {
+    public CustomerDTO getMyProfile() {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
-        CustomerDTO customerDTO = CustomerDTO.builder()
+        return CustomerDTO.builder()
                 .id(customer.getId())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
@@ -49,16 +47,10 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
                 .governorate(enumLocalizationService.getLocalizedName(customer.getGovernorate()))
                 .address(customer.getAddress())
                 .build();
-
-        return Response.<CustomerDTO>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("user.retrieved")
-                .data(customerDTO)
-                .build();
     }
 
     @Override
-    public Response<?> updateMyProfile(CustomerUpdateRequest customerUpdateRequest) {
+    public void updateMyProfile(CustomerUpdateRequest customerUpdateRequest) {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
         if (customerRepo.existsByEmailAndIdNot(customerUpdateRequest.getEmail(), customer.getId())) {
@@ -76,15 +68,10 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
         customer.setAddress(customerUpdateRequest.getAddress());
 
         customerRepo.save(customer);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("user.profile.updated")
-                .build();
     }
 
     @Override
-    public Response<?> updatePassword(UpdatePasswordRequest updatePasswordRequest) {
+    public void updatePassword(UpdatePasswordRequest updatePasswordRequest) {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
         String newPassword = updatePasswordRequest.getNewPassword();
@@ -101,22 +88,17 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
 
         // send password change confirmation email
         Map<String, Object> templateVariables = new HashMap<>();
-        templateVariables.put("name", customer.getFirstName());
+        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
 
         NotificationDTO notificationDTO = NotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.password.changed.subject", null, LocaleContextHolder.getLocale()))
-                .templateName("password-change")
+                .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-change")
                 .templateVariables(templateVariables)
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO, null);
-
-        return Response.builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("auth.password.changed.success")
-                .build();
+        notificationSenderFacade.send(notificationDTO);
     }
 
 }

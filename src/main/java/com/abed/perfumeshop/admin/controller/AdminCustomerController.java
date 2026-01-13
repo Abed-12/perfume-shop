@@ -5,6 +5,7 @@ import com.abed.perfumeshop.common.dto.PageResponse;
 import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.customer.dto.CustomerDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +25,15 @@ public class AdminCustomerController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String email
     ){
-        return ResponseEntity.ok(adminCustomerService.getCustomers(page, size, email));
+        PageResponse<CustomerDTO> pageResponse = adminCustomerService.getCustomers(page, size, email);
+
+        return ResponseEntity.ok(
+                Response.<PageResponse<CustomerDTO>>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("customers.retrieved")
+                        .data(pageResponse)
+                        .build()
+        );
     }
 
 }

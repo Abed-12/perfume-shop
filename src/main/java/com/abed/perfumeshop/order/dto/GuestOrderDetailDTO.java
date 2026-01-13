@@ -1,6 +1,5 @@
 package com.abed.perfumeshop.order.dto;
 
-import com.abed.perfumeshop.common.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,16 +11,18 @@ import java.util.List;
 @Builder
 public class GuestOrderDetailDTO {
 
-    private Long orderId;
+    private String orderNumber;
 
-    private String trackingToken;
-    private OrderStatus status;
+    private String status;
     private String notes;
     private LocalDateTime orderDate;
     private LocalDateTime deliveredAt;
     private LocalDateTime cancelledAt;
+    private String cancellationReason;
 
-    private CustomerInfo customerInfo;
+    private GuestInfo guestInfo;
+
+    private ShippingInfo shippingInfo;
 
     private List<OrderItemInfo> items;
 
@@ -29,9 +30,14 @@ public class GuestOrderDetailDTO {
 
     @Data
     @Builder
-    public static class CustomerInfo {
+    public static class GuestInfo {
         private String username;
         private String email;
+    }
+
+    @Data
+    @Builder
+    public static class ShippingInfo {
         private String phoneNumber;
         private String alternativePhoneNumber;
         private String governorate;
