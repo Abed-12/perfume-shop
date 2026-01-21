@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>كوبون خصم خاص - Perfume Shop</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #f5f1ed 0%, #e8dfd6 100%);
+                direction: rtl;
+                min-height: 100vh;
+                padding: 10px;
+            }
+            .container {
+                max-width: 600px;
+                margin: 20px auto;
+                background: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 8px 24px rgba(139, 69, 19, 0.1);
+            }
+            .header {
+                background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+                padding: 25px 20px;
+                text-align: center;
+            }
+            .logo {
+                font-size: 40px;
+                margin-bottom: 8px;
+            }
+            .brand {
+                color: #d4af37;
+                font-size: 22px;
+                font-weight: bold;
+                margin: 0;
+                letter-spacing: 1.5px;
+            }
+            .content {
+                padding: 30px 20px;
+                text-align: center;
+            }
+            .gift-icon {
+                font-size: 50px;
+                margin: 0 auto 20px;
+                color: #e91e63;
+                text-shadow: 0 2px 8px rgba(233, 30, 99, 0.3);
+            }
+            h1 {
+                color: #c2185b;
+                font-size: 22px;
+                margin: 0 0 18px 0;
+                line-height: 1.4;
+            }
+            .greeting {
+                font-size: 17px;
+                color: #333;
+                margin-bottom: 18px;
+            }
+            .message {
+                font-size: 15px;
+                color: #555;
+                line-height: 1.7;
+                margin-bottom: 20px;
+            }
+            .coupon-box {
+                background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+                color: white;
+                padding: 25px 20px;
+                margin: 25px 0;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+            }
+            .coupon-label {
+                font-size: 14px;
+                opacity: 0.9;
+                margin-bottom: 10px;
+            }
+            .coupon-code {
+                font-size: 28px;
+                font-weight: bold;
+                letter-spacing: 3px;
+                margin: 15px 0;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+                border: 2px dashed rgba(255, 255, 255, 0.5);
+            }
+            .discount-info {
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 15px;
+            }
+            .divider {
+                height: 2px;
+                background: linear-gradient(to left, transparent, #d4af37, transparent);
+                margin: 25px 0;
+            }
+            .info-box {
+                background: #f8f9fa;
+                border-right: 4px solid #8b4513;
+                padding: 18px 15px;
+                margin: 20px 0;
+                text-align: right;
+            }
+            .info-box p {
+                margin: 8px 0;
+                color: #555;
+                font-size: 14px;
+                line-height: 1.8;
+            }
+            .info-box strong {
+                color: #8b4513;
+            }
+            .login-notice {
+                background: #fff3e0;
+                border-right: 4px solid #ff9800;
+                padding: 18px 15px;
+                margin: 20px 0;
+                text-align: right;
+            }
+            .login-notice p {
+                margin: 0;
+                color: #e65100;
+                font-size: 14px;
+                line-height: 1.8;
+                font-weight: 500;
+            }
+            .footer {
+                background: #2c2c2c;
+                padding: 20px 15px;
+                text-align: center;
+            }
+            .footer-content {
+                color: #d4af37;
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            .copyright {
+                color: #999;
+                font-size: 11px;
+                margin-top: 12px;
+                line-height: 1.6;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🌸</div>
+                <h2 class="brand">Perfume Shop</h2>
+            </div>
+
+            <div class="content">
+                <div class="gift-icon">🎁</div>
+
+                <h1>كوبون خصم خاص لك</h1>
+
+                <p class="greeting">مرحباً <strong th:text="${customerName}"></strong></p>
+
+                <p class="message">
+                    يسعدنا أن نقدم لك كوبون خصم حصري على مشترياتك من<br /> Perfume Shop
+                </p>
+
+                <div class="coupon-box">
+                    <div class="coupon-label">كود الخصم الخاص بك</div>
+                    <div class="coupon-code" th:text="${couponCode}"></div>
+                    <div class="discount-info">
+                        خصم <span th:text="${discountValue}"></span>
+                        <span th:if="${discountType == 'PERCENTAGE'}">%</span>
+                        <span th:if="${discountType == 'FIXED'}">دينار</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="info-box">
+                    <p><strong>تفاصيل الكوبون</strong></p>
+                    <p><strong>قيمة الخصم:</strong>
+                        <span th:text="${discountValue}"></span>
+                        <span th:if="${discountType == 'PERCENTAGE'}">%</span>
+                        <span th:if="${discountType == 'FIXED'}">دينار</span>
+                    </p>
+                    <p><strong>تاريخ الانتهاء:</strong> <span th:text="${#temporals.format(expiryDate, 'dd/MM/yyyy')}"></span></p>
+                    <p th:if="${maxUsage != null}"><strong>متاح لـ:</strong> أول <span th:text="${maxUsage}"></span> فقط</p>
+                </div>
+
+                <div th:if="${needsLogin}" class="login-notice">
+                    <p>
+                        <strong>ملاحظة مهمة:</strong> يجب عليك تسجيل الدخول لحسابك لاستخدام هذا الكوبون
+                    </p>
+                </div>
+
+                <div class="divider"></div>
+
+                <p class="message" style="font-size: 13px; color: #666;">
+                    لا تفوت هذه الفرصة الرائعة<br>
+                    ابدأ التسوق الآن واستمتع بخصمك الخاص
+                </p>
+
+                <p class="message">
+                    شكراً لثقتك بـ<br /> <strong>Perfume Shop</strong> 🌸
+                </p>
+            </div>
+
+            <div class="footer">
+                <p class="footer-content">
+                    <strong>Perfume Shop</strong> - عطورك المميزة
+                </p>
+                <p class="copyright">
+                    © <span th:text="${T(java.time.Year).now().value}"></span> Perfume Shop<br />
+                    جميع الحقوق محفوظة
+                </p>
+            </div>
+        </div>
+    </body>
+</html>

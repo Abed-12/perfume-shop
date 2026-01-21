@@ -30,9 +30,6 @@ public class Item {
     private String name;
 
     @Column(nullable = false)
-    private Integer quantity;
-
-    @Column(nullable = false)
     private String brand;
 
     @Builder.Default

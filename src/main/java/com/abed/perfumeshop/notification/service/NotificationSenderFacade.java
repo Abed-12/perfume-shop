@@ -2,7 +2,7 @@ package com.abed.perfumeshop.notification.service;
 
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

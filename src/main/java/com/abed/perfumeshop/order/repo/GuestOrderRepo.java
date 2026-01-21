@@ -1,8 +1,10 @@
 package com.abed.perfumeshop.order.repo;
 
 import com.abed.perfumeshop.common.enums.OrderStatus;
+import com.abed.perfumeshop.common.projection.EmailRecipientProjection;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.order.entity.GuestOrder;
+import com.abed.perfumeshop.order.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,10 +24,21 @@ public interface GuestOrderRepo extends JpaRepository<GuestOrder, Long> {
 
     Optional<GuestOrder> findByOrder_OrderNumber(String orderNumber);
 
-    @Query("SELECT go FROM GuestOrder go " +
+    @Query("SELECT g.email AS email, " +
+            "MAX(g.username) AS name, " +
+            "false AS isCustomer " +
+            "FROM GuestOrder g " +
+            "GROUP BY g.email")
+    List<EmailRecipientProjection> findAllDistinctEmailProjections();
+
+    @Query("SELECT go.order FROM GuestOrder go " +
             "WHERE go.claimedByCustomer = :customer " +
             "AND (:status IS NULL OR go.order.status = :status)")
-    List<GuestOrder> findByClaimedCustomerAndStatusOrAll(@Param("customer") Customer customer, @Param("status") OrderStatus status);
+    List<Order> findByClaimedCustomerAndStatusOrAll(@Param("customer") Customer customer, @Param("status") OrderStatus status);
+
+    @Query("SELECT go FROM GuestOrder go " +
+            "WHERE go.order.orderNumber IN :orderNumbers")
+    List<GuestOrder> findByOrder_OrderNumberIn(@Param("orderNumbers") List<String> orderNumbers);
 
     @Query("SELECT go FROM GuestOrder go " +
             "WHERE (:status IS NULL OR go.order.status = :status) " +

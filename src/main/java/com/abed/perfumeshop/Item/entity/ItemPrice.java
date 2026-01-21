@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.Item.entity;
 
+import com.abed.perfumeshop.common.enums.PerfumeSize;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,6 +37,13 @@ public class ItemPrice {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PerfumeSize perfumeSize;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)

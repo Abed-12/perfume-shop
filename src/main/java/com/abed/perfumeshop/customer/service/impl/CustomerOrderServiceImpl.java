@@ -1,7 +1,6 @@
 package com.abed.perfumeshop.customer.service.impl;
 
-import com.abed.perfumeshop.Item.repo.*;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.CancellationSource;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.enums.OrderStatus;
@@ -16,9 +15,13 @@ import com.abed.perfumeshop.coupon.repo.CouponUsageRepo;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.helper.CustomerHelper;
 import com.abed.perfumeshop.customer.service.CustomerOrderService;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
-import com.abed.perfumeshop.order.dto.*;
+import com.abed.perfumeshop.order.dto.request.CancelCustomerOrderRequest;
+import com.abed.perfumeshop.order.dto.request.CreateCustomerOrderRequest;
+import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.OrderResponseDTO;
+import com.abed.perfumeshop.order.dto.response.OrderSummaryDTO;
 import com.abed.perfumeshop.order.entity.CustomerOrder;
 import com.abed.perfumeshop.order.entity.GuestOrder;
 import com.abed.perfumeshop.order.entity.Order;
@@ -35,6 +38,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -167,53 +172,74 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     public PageResponse<OrderSummaryDTO> getOrders(int page, int size, OrderStatus status) {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
-        // Fetch customer and guest orders by status
-        List<CustomerOrder> customerOrders = customerOrderRepo.findByCustomerAndStatusOrAll(customer, status);
-        List<GuestOrder> guestOrders = guestOrderRepo.findByClaimedCustomerAndStatusOrAll(customer, status);
-
-        // Combine all orders into single list
+        // Fetch and combine customer and guest orders
         List<Order> allOrders = Stream.concat(
-                customerOrders.stream().map(CustomerOrder::getOrder),
-                guestOrders.stream().map(GuestOrder::getOrder)
+                customerOrderRepo.findByCustomerAndStatusOrAll(customer, status).stream(),
+                guestOrderRepo.findByClaimedCustomerAndStatusOrAll(customer, status).stream()
         ).toList();
 
-        // Get item counts for each order (skip DB call if no orders)
-        Map<Long, Integer> itemCountsByOrderId = allOrders.isEmpty()
-                ? Collections.emptyMap()
-                : orderItemRepo.countItemsByOrders(allOrders).stream()
+        if (allOrders.isEmpty()) {
+            return PageResponse.<OrderSummaryDTO>builder()
+                    .content(Collections.emptyList())
+                    .page(PageResponse.PageInfo.builder()
+                            .size(size)
+                            .number(page)
+                            .totalElements(0)
+                            .totalPages(0)
+                            .build())
+                    .build();
+        }
+
+        // Extract order IDs then Paginate orders
+        List<Long> orderIds = allOrders.stream()
+                .map(Order::getId)
+                .toList();
+        Page<Order> orderPage = orderRepo.findByOrderIdsIn(orderIds, PageRequest.of(page, size));
+
+        // Fetch related data for current page
+        List<String> pageOrderNumbers = orderPage.getContent().stream()
+                .map(Order::getOrderNumber)
+                .toList();
+
+        Map<String, CustomerOrder> customerOrderMap = customerOrderRepo.findByOrder_OrderNumberIn(pageOrderNumbers).stream()
                 .collect(Collectors.toMap(
-                        OrderItemCount::getOrderId,
+                        co -> co.getOrder().getOrderNumber(),
+                        co -> co
+                ));
+
+        Map<String, GuestOrder> guestOrderMap = guestOrderRepo.findByOrder_OrderNumberIn(pageOrderNumbers).stream()
+                .collect(Collectors.toMap(
+                        go -> go.getOrder().getOrderNumber(),
+                        go -> go
+                ));
+
+        // Get item counts for each order
+        Map<String, Integer> itemCounts = orderItemRepo.countItemsByOrders(orderPage.getContent()).stream()
+                .collect(Collectors.toMap(
+                        OrderItemCount::getOrderNumber,
                         count -> count.getItemCount().intValue()
                 ));
 
-        // Map orders to DTOs and sort by date (newest first)
-        List<OrderSummaryDTO> allOrdersDTOs = Stream.concat(
-                        customerOrders.stream()
-                                .map(co -> mapCustomerOrderToDTO(co, itemCountsByOrderId.getOrDefault(co.getOrder().getId(), 0))),
-                        guestOrders.stream()
-                                .map(go -> mapGuestOrderToDTO(go, itemCountsByOrderId.getOrDefault(go.getOrder().getId(), 0)))
-                ).sorted(Comparator.comparing(OrderSummaryDTO::getOrderDate).reversed())
+        // Map orders to DTOs
+        List<OrderSummaryDTO> pageContent = orderPage.getContent().stream()
+                .map(order -> {
+                    int itemCount = itemCounts.getOrDefault(order.getOrderNumber(), 0);
+                    CustomerOrder customerOrder = customerOrderMap.get(order.getOrderNumber());
+
+                    return customerOrder != null
+                            ? mapCustomerOrderToDTO(customerOrder, itemCount)
+                            : mapGuestOrderToDTO(guestOrderMap.get(order.getOrderNumber()), itemCount);
+                })
                 .collect(Collectors.toList());
-
-        // Calculate pagination details
-        int totalElements = allOrdersDTOs.size();
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        int start = page * size;
-        int end = Math.min(start + size, totalElements);
-
-        // Extract page content
-        List<OrderSummaryDTO> pageContent = start < totalElements
-                ? allOrdersDTOs.subList(start, end)
-                : List.of();
 
         // Build paginated response
         return PageResponse.<OrderSummaryDTO>builder()
                 .content(pageContent)
                 .page(PageResponse.PageInfo.builder()
-                        .size(size)
-                        .number(page)
-                        .totalElements(totalElements)
-                        .totalPages(totalPages)
+                        .size(orderPage.getSize())
+                        .number(orderPage.getNumber())
+                        .totalElements(orderPage.getTotalElements())
+                        .totalPages(orderPage.getTotalPages())
                         .build())
                 .build();
     }
@@ -289,7 +315,6 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     private OrderSummaryDTO mapCustomerOrderToDTO(CustomerOrder customerOrder, int itemCount) {
         Order order = customerOrder.getOrder();
         Customer customer = customerOrder.getCustomer();
-
 
         return OrderSummaryDTO.builder()
                 .orderNumber(order.getOrderNumber())

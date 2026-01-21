@@ -2,15 +2,18 @@ package com.abed.perfumeshop.admin.service.impl;
 
 import com.abed.perfumeshop.admin.entity.Admin;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
+import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
+import com.abed.perfumeshop.notification.service.CouponNotificationService;
 import com.abed.perfumeshop.passwordResetCode.service.CodeGenerator;
-import com.abed.perfumeshop.coupon.dto.CouponRequest;
-import com.abed.perfumeshop.coupon.dto.CouponResponse;
+import com.abed.perfumeshop.coupon.dto.request.CouponRequest;
+import com.abed.perfumeshop.coupon.dto.response.CouponResponse;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.coupon.repo.CouponRepo;
 import com.abed.perfumeshop.admin.service.AdminCouponService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +22,7 @@ public class AdminCouponServiceImpl implements AdminCouponService {
 
     private final CouponRepo couponRepo;
     private final AdminHelper adminHelper;
+    private final CouponNotificationService couponNotificationService;
     private final CodeGenerator codeGenerator;
     private final EnumLocalizationService enumLocalizationService;
 
@@ -28,7 +32,7 @@ public class AdminCouponServiceImpl implements AdminCouponService {
 
         couponRepo.findByActiveTrue()
                 .ifPresent(c -> {
-                    throw new IllegalStateException("coupon.active.already.exists");
+                    throw new AlreadyExistsException("coupon.active.already.exists");
                 });
 
         String code = codeGenerator.generateUniqueCode(couponRepo::existsByCode);
@@ -44,8 +48,7 @@ public class AdminCouponServiceImpl implements AdminCouponService {
 
         couponRepo.save(coupon);
 
-        // Send email to customer and guest
-
+        couponNotificationService.sendCouponToAllUsers(coupon, LocaleContextHolder.getLocale());
     }
 
     @Override

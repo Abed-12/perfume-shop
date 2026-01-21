@@ -2,7 +2,7 @@ package com.abed.perfumeshop.admin.service.impl;
 
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.admin.service.AdminOrderService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.CancellationSource;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.enums.OrderStatus;
@@ -11,12 +11,12 @@ import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.entity.Customer;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
-import com.abed.perfumeshop.order.dto.AdminOrderSummaryDTO;
-import com.abed.perfumeshop.order.dto.CustomerOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.GuestOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.UpdateOrderStatusRequest;
+import com.abed.perfumeshop.order.dto.response.AdminOrderSummaryDTO;
+import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.GuestOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.request.UpdateOrderStatusRequest;
 import com.abed.perfumeshop.order.entity.CustomerOrder;
 import com.abed.perfumeshop.order.entity.GuestOrder;
 import com.abed.perfumeshop.order.entity.Order;
@@ -75,7 +75,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .toList();
 
         // Get item counts
-        Map<Long, Integer> itemCounts = getItemCounts(orders);
+        Map<String, Integer> itemCounts = getItemCounts(orders);
 
         // Map to DTOs
         List<AdminOrderSummaryDTO> orderDTOs = ordersPage.getContent().stream()
@@ -106,7 +106,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .toList();
 
         // Get item counts
-        Map<Long, Integer> itemCounts = getItemCounts(orders);
+        Map<String, Integer> itemCounts = getItemCounts(orders);
 
         // Map to DTOs
         List<AdminOrderSummaryDTO> orderDTOs = ordersPage.getContent().stream()
@@ -193,21 +193,21 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     }
 
     // ========== Private Helper Methods ==========
-    private Map<Long, Integer> getItemCounts(List<Order> orders) {
+    private Map<String, Integer> getItemCounts(List<Order> orders) {
         if (orders.isEmpty()) {
             return Map.of();
         }
 
         return orderItemRepo.countItemsByOrders(orders).stream()
                 .collect(Collectors.toMap(
-                        OrderItemCount::getOrderId,
+                        OrderItemCount::getOrderNumber,
                         count -> count.getItemCount().intValue()
                 ));
     }
 
     private AdminOrderSummaryDTO mapCustomerOrderToDTO(
             CustomerOrder customerOrder,
-            Map<Long, Integer> itemCounts
+            Map<String, Integer> itemCounts
     ) {
         Order order = customerOrder.getOrder();
         Customer customer = customerOrder.getCustomer();
@@ -219,13 +219,13 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .customerName(customer.getFirstName() + " " + customer.getLastName())
                 .customerEmail(customer.getEmail())
                 .totalPrice(order.getTotalPrice())
-                .itemCount(itemCounts.getOrDefault(order.getId(), 0))
+                .itemCount(itemCounts.getOrDefault(order.getOrderNumber(), 0))
                 .build();
     }
 
     private AdminOrderSummaryDTO mapGuestOrderToDTO(
             GuestOrder guestOrder,
-            Map<Long, Integer> itemCounts
+            Map<String, Integer> itemCounts
     ) {
         Order order = guestOrder.getOrder();
 
@@ -236,7 +236,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .customerName(guestOrder.getUsername())
                 .customerEmail(guestOrder.getEmail())
                 .totalPrice(order.getTotalPrice())
-                .itemCount(itemCounts.getOrDefault(order.getId(), 0))
+                .itemCount(itemCounts.getOrDefault(order.getOrderNumber(), 0))
                 .build();
     }
 

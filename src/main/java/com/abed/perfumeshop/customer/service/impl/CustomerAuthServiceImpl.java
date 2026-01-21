@@ -1,19 +1,19 @@
 package com.abed.perfumeshop.customer.service.impl;
 
 import com.abed.perfumeshop.admin.repo.AdminRepo;
-import com.abed.perfumeshop.common.dto.LoginRequest;
-import com.abed.perfumeshop.common.dto.LoginResponse;
-import com.abed.perfumeshop.common.dto.PasswordResetRequest;
+import com.abed.perfumeshop.common.dto.request.LoginRequest;
+import com.abed.perfumeshop.common.dto.response.LoginResponse;
+import com.abed.perfumeshop.common.dto.request.PasswordResetRequest;
 import com.abed.perfumeshop.common.enums.UserType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.enums.NotificationType;
-import com.abed.perfumeshop.customer.dto.CustomerRegisterRequest;
+import com.abed.perfumeshop.customer.dto.request.CustomerRegisterRequest;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
 import com.abed.perfumeshop.customer.service.CustomerAuthService;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.entity.GuestOrder;
 import com.abed.perfumeshop.order.repo.GuestOrderRepo;

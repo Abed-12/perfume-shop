@@ -1,7 +1,5 @@
 package com.abed.perfumeshop.Item.entity;
 
-import com.abed.perfumeshop.common.enums.PerfumeSeason;
-import com.abed.perfumeshop.common.enums.PerfumeSize;
 import com.abed.perfumeshop.common.enums.PerfumeType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,15 +23,10 @@ public class Perfume {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PerfumeSize perfumeSize;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private PerfumeType perfumeType;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PerfumeSeason perfumeSeason;
+    private String perfumeSeasons;
 
     @OneToOne(optional = false)
     @JoinColumn(nullable = false, unique = true, updatable = false)

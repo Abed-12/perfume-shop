@@ -1,7 +1,7 @@
 package com.abed.perfumeshop.admin.service;
 
-import com.abed.perfumeshop.common.dto.PageResponse;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
 
 public interface AdminCustomerService {
 

@@ -1,8 +1,8 @@
 package com.abed.perfumeshop.customer.service;
 
-import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
-import com.abed.perfumeshop.customer.dto.CustomerUpdateRequest;
+import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
+import com.abed.perfumeshop.customer.dto.request.CustomerUpdateRequest;
 
 public interface CustomerProfileService {
 

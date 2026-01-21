@@ -1,10 +1,12 @@
 package com.abed.perfumeshop.Item.controller;
 
-import com.abed.perfumeshop.Item.dto.PerfumeCardDTO;
-import com.abed.perfumeshop.Item.dto.PerfumeDetailDTO;
+import com.abed.perfumeshop.Item.dto.response.PerfumeCardDTO;
+import com.abed.perfumeshop.Item.dto.response.PerfumeDetailDTO;
 import com.abed.perfumeshop.Item.entity.PerfumeImage;
 import com.abed.perfumeshop.Item.service.PublicPerfumeService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
+import com.abed.perfumeshop.common.enums.PerfumeSeason;
+import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.res.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -25,9 +27,11 @@ public class PublicPerfumeController {
     @GetMapping
     public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> getActivePerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) PerfumeType perfumeType,
+            @RequestParam(required = false) PerfumeSeason perfumeSeason
     ){
-        PageResponse<PerfumeCardDTO> pageResponse = publicPerfumeService.getActivePerfumes(page, size);
+        PageResponse<PerfumeCardDTO> pageResponse = publicPerfumeService.getActivePerfumes(page, size, perfumeType, perfumeSeason);
 
         return ResponseEntity.ok(
                 Response.<PageResponse<PerfumeCardDTO>>builder()

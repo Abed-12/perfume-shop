@@ -1,7 +1,7 @@
 package com.abed.perfumeshop.admin.controller;
 
-import com.abed.perfumeshop.coupon.dto.CouponRequest;
-import com.abed.perfumeshop.coupon.dto.CouponResponse;
+import com.abed.perfumeshop.coupon.dto.request.CouponRequest;
+import com.abed.perfumeshop.coupon.dto.response.CouponResponse;
 import com.abed.perfumeshop.admin.service.AdminCouponService;
 import com.abed.perfumeshop.common.res.Response;
 import jakarta.validation.Valid;

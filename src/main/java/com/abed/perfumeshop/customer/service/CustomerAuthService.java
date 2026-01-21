@@ -1,9 +1,9 @@
 package com.abed.perfumeshop.customer.service;
 
-import com.abed.perfumeshop.common.dto.LoginRequest;
-import com.abed.perfumeshop.common.dto.LoginResponse;
-import com.abed.perfumeshop.common.dto.PasswordResetRequest;
-import com.abed.perfumeshop.customer.dto.CustomerRegisterRequest;
+import com.abed.perfumeshop.common.dto.request.LoginRequest;
+import com.abed.perfumeshop.common.dto.response.LoginResponse;
+import com.abed.perfumeshop.common.dto.request.PasswordResetRequest;
+import com.abed.perfumeshop.customer.dto.request.CustomerRegisterRequest;
 
 public interface CustomerAuthService {
 

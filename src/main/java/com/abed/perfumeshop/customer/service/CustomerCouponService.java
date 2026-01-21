@@ -1,7 +1,7 @@
 package com.abed.perfumeshop.customer.service;
 
-import com.abed.perfumeshop.coupon.dto.CouponValidationRequest;
-import com.abed.perfumeshop.coupon.dto.CouponValidationResponse;
+import com.abed.perfumeshop.coupon.dto.request.CouponValidationRequest;
+import com.abed.perfumeshop.coupon.dto.response.CouponValidationResponse;
 
 public interface CustomerCouponService {
 

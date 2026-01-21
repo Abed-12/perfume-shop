@@ -1,9 +1,9 @@
 package com.abed.perfumeshop.admin.controller;
 
 import com.abed.perfumeshop.admin.service.AdminCustomerService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.res.Response;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,13 +1,13 @@
 package com.abed.perfumeshop.admin.controller;
 
 import com.abed.perfumeshop.admin.service.AdminOrderService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.OrderStatus;
 import com.abed.perfumeshop.common.res.Response;
-import com.abed.perfumeshop.order.dto.AdminOrderSummaryDTO;
-import com.abed.perfumeshop.order.dto.CustomerOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.GuestOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.UpdateOrderStatusRequest;
+import com.abed.perfumeshop.order.dto.response.AdminOrderSummaryDTO;
+import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.GuestOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.request.UpdateOrderStatusRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

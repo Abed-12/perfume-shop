@@ -1,9 +1,9 @@
 package com.abed.perfumeshop.order.service;
 
-import com.abed.perfumeshop.order.dto.CancelGuestOrderRequest;
-import com.abed.perfumeshop.order.dto.CreateGuestOrderRequest;
-import com.abed.perfumeshop.order.dto.GuestOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.OrderResponseDTO;
+import com.abed.perfumeshop.order.dto.request.CancelGuestOrderRequest;
+import com.abed.perfumeshop.order.dto.request.CreateGuestOrderRequest;
+import com.abed.perfumeshop.order.dto.response.GuestOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.OrderResponseDTO;
 
 public interface GuestOrderService {
 

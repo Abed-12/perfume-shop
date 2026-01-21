@@ -1,9 +1,9 @@
 package com.abed.perfumeshop.customer.controller;
 
-import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
+import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.res.Response;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
-import com.abed.perfumeshop.customer.dto.CustomerUpdateRequest;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
+import com.abed.perfumeshop.customer.dto.request.CustomerUpdateRequest;
 import com.abed.perfumeshop.customer.service.CustomerProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

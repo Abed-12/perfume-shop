@@ -1,17 +1,18 @@
 package com.abed.perfumeshop.customer.service.impl;
 
-import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
+import com.abed.perfumeshop.admin.repo.AdminRepo;
+import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
-import com.abed.perfumeshop.customer.dto.CustomerUpdateRequest;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
+import com.abed.perfumeshop.customer.dto.request.CustomerUpdateRequest;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
 import com.abed.perfumeshop.customer.helper.CustomerHelper;
 import com.abed.perfumeshop.customer.service.CustomerProfileService;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -28,6 +29,7 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
 
     private final CustomerRepo customerRepo;
     private final CustomerHelper customerHelper;
+    private final AdminRepo adminRepo;
     private final NotificationSenderFacade notificationSenderFacade;
     private final EnumLocalizationService enumLocalizationService;
     private final PasswordEncoder passwordEncoder;
@@ -53,7 +55,8 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
     public void updateMyProfile(CustomerUpdateRequest customerUpdateRequest) {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
-        if (customerRepo.existsByEmailAndIdNot(customerUpdateRequest.getEmail(), customer.getId())) {
+        if (customerRepo.existsByEmailAndIdNot(customerUpdateRequest.getEmail(), customer.getId())
+                || adminRepo.existsByEmail(customerUpdateRequest.getEmail())) {
             throw new AlreadyExistsException("user.email.already.exists");
         }
 

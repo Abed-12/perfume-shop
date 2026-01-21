@@ -1,7 +1,7 @@
 package com.abed.perfumeshop.notification.service.impl;
 
 import com.abed.perfumeshop.common.enums.NotificationType;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.entity.Notification;
 import com.abed.perfumeshop.notification.repo.NotificationRepo;
 import com.abed.perfumeshop.notification.service.NotificationSender;

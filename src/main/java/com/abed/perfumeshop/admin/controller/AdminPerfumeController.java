@@ -1,10 +1,12 @@
 package com.abed.perfumeshop.admin.controller;
 
-import com.abed.perfumeshop.Item.dto.AdminPerfumeCardDTO;
-import com.abed.perfumeshop.Item.dto.CreatePerfumeRequest;
-import com.abed.perfumeshop.Item.dto.UpdatePerfumeRequest;
+import com.abed.perfumeshop.Item.dto.response.AdminPerfumeCardDTO;
+import com.abed.perfumeshop.Item.dto.request.CreatePerfumeRequest;
+import com.abed.perfumeshop.Item.dto.request.UpdatePerfumeRequest;
 import com.abed.perfumeshop.admin.service.AdminPerfumeService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
+import com.abed.perfumeshop.common.enums.PerfumeSeason;
+import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.res.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +27,33 @@ public class AdminPerfumeController {
     @GetMapping
     public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> getAllPerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) PerfumeType perfumeType,
+            @RequestParam(required = false) PerfumeSeason perfumeSeason
     ) {
-        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.getAllPerfumes(page, size);
+        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.getAllPerfumes(page, size, perfumeType, perfumeSeason);
 
         return ResponseEntity.ok(
                 Response.<PageResponse<AdminPerfumeCardDTO>>builder()
                         .statusCode(HttpStatus.OK.value())
                         .message("perfumes.retrieved")
+                        .data(pageResponse)
+                        .build()
+        );
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> searchPerfumes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam String keyword
+    ){
+        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.searchPerfumes(page, size, keyword);
+
+        return ResponseEntity.ok(
+                Response.<PageResponse<AdminPerfumeCardDTO>>builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("perfumes.search.retrieved")
                         .data(pageResponse)
                         .build()
         );

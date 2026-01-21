@@ -28,7 +28,7 @@ public class PasswordResetCode {
 
     @Builder.Default
     @Column(nullable = false)
-    private boolean used = false;
+    private Boolean used = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

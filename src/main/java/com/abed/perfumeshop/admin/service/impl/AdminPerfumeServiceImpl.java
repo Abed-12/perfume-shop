@@ -1,11 +1,15 @@
 package com.abed.perfumeshop.admin.service.impl;
 
-import com.abed.perfumeshop.Item.dto.*;
+import com.abed.perfumeshop.Item.dto.request.*;
+import com.abed.perfumeshop.Item.dto.response.AdminPerfumeCardDTO;
 import com.abed.perfumeshop.Item.entity.*;
 import com.abed.perfumeshop.Item.repo.*;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.admin.service.AdminPerfumeService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
+import com.abed.perfumeshop.common.enums.PerfumeSeason;
+import com.abed.perfumeshop.common.enums.PerfumeSize;
+import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.exception.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -36,8 +40,32 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminPerfumeCardDTO> getAllPerfumes(int page, int size) {
-        Page<Perfume> perfumesPage = perfumeRepo.findAll(PageRequest.of(page, size));
+    public PageResponse<AdminPerfumeCardDTO> getAllPerfumes(
+            int page,
+            int size,
+            PerfumeType perfumeType,
+            PerfumeSeason perfumeSeason
+    ) {
+        // Convert PerfumeSeason to String (or null)
+        String perfumeSeasonString = perfumeSeason != null ? perfumeSeason.name() : null;
+        Page<Perfume> perfumesPage = perfumeRepo.findAllWithFilters(perfumeType, perfumeSeasonString, PageRequest.of(page, size));
+
+        return buildAdminPerfumeCardResponse(perfumesPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new ValidationException("perfume.search.keyword.required");
+        }
+
+        if (keyword.trim().length() < 2) {
+            throw new ValidationException("perfume.search.keyword.too.short");
+        }
+
+        Page<Perfume> perfumesPage = perfumeRepo.searchAllPerfumes(keyword, PageRequest.of(page, size));
+
         return buildAdminPerfumeCardResponse(perfumesPage);
     }
 
@@ -56,17 +84,20 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
         // Create and save base item
         Item item = Item.builder()
                 .name(createPerfumeRequest.getName())
-                .quantity(createPerfumeRequest.getQuantity())
                 .brand(createPerfumeRequest.getBrand())
                 .build();
         itemRepo.save(item);
 
-        // Create and save item price
-        ItemPrice itemPrice = ItemPrice.builder()
-                .price(createPerfumeRequest.getPrice())
-                .item(item)
-                .build();
-        itemPriceRepo.save(itemPrice);
+        // Create and save item prices for all sizes
+        List<ItemPrice> itemPrices = createPerfumeRequest.getPrices().stream()
+                .map(priceRequest -> ItemPrice.builder()
+                        .price(priceRequest.getPrice())
+                        .quantity(priceRequest.getQuantity())
+                        .perfumeSize(priceRequest.getPerfumeSize())
+                        .item(item)
+                        .build())
+                .toList();
+        itemPriceRepo.saveAll(itemPrices);
 
         // Create and save translations for different locales
         List<ItemTranslation> translations = createPerfumeRequest.getTranslations().stream()
@@ -79,11 +110,16 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                 .toList();
         itemTranslationRepo.saveAll(translations);
 
+        // Convert perfume seasons Set to comma-separated String
+        String perfumeSeasons = createPerfumeRequest.getPerfumeSeasons().stream()
+                .map(Enum::name)
+                .sorted()
+                .collect(Collectors.joining(","));
+
         // Create and save perfume-specific details
         Perfume perfume = Perfume.builder()
-                .perfumeSize(createPerfumeRequest.getPerfumeSize())
                 .perfumeType(createPerfumeRequest.getPerfumeType())
-                .perfumeSeason(createPerfumeRequest.getPerfumeSeason())
+                .perfumeSeasons(perfumeSeasons)
                 .item(item)
                 .build();
         perfumeRepo.save(perfume);
@@ -117,6 +153,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
         Item item = perfume.getItem();
 
+        // Check for duplicate name/brand
         if (itemRepo.existsByNameAndBrandAndIdNot(
                 updatePerfumeRequest.getName(),
                 updatePerfumeRequest.getBrand(),
@@ -124,47 +161,89 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             throw new AlreadyExistsException("item.already.exists");
         }
 
+        // Validate active status consistency with prices
+        validateActiveStatusConsistency(updatePerfumeRequest);
+
         // Update item
         item.setName(updatePerfumeRequest.getName());
         item.setBrand(updatePerfumeRequest.getBrand());
-        item.setQuantity(updatePerfumeRequest.getQuantity());
+        item.setActive(updatePerfumeRequest.getActive());
 
-        if (updatePerfumeRequest.getQuantity() == 0) {
-            item.setActive(false);
-        } else {
-            item.setActive(updatePerfumeRequest.getActive());
-        }
+        // Convert perfume seasons Set to comma-separated String
+        String perfumeSeasons = updatePerfumeRequest.getPerfumeSeasons().stream()
+                .map(Enum::name)
+                .sorted()
+                .collect(Collectors.joining(","));
 
         // Update perfume
-        perfume.setPerfumeSize(updatePerfumeRequest.getPerfumeSize());
         perfume.setPerfumeType(updatePerfumeRequest.getPerfumeType());
-        perfume.setPerfumeSeason(updatePerfumeRequest.getPerfumeSeason());
+        perfume.setPerfumeSeasons(perfumeSeasons);
 
-        // Update price
-        ItemPrice currentPrice = itemPriceRepo.findCurrentActivePriceByItemId(item.getId())
-                .orElse(null);
+        // Track processed sizes to identify removed ones later
+        Set<PerfumeSize> processedSizes = new HashSet<>();
 
-        boolean priceChanged = currentPrice != null &&
-                currentPrice.getPrice().compareTo(updatePerfumeRequest.getPrice()) != 0;
+        // Process each price in the request
+        for (UpdatePerfumePriceRequest priceRequest : updatePerfumeRequest.getPrices()) {
+            // Check if active price exists for this size
+            Optional<ItemPrice> existingActivePrice = itemPriceRepo.findByItemIdAndPerfumeSizeAndIsActiveTrue(
+                    item.getId(),
+                    priceRequest.getPerfumeSize()
+            );
 
-        if (priceChanged &&
-                (updatePerfumeRequest.getNote() == null || updatePerfumeRequest.getNote().trim().isBlank())) {
-            throw new ValidationException("item.note.required.when.price.changed");
+            if (existingActivePrice.isPresent()) {
+                ItemPrice currentPrice = existingActivePrice.get();
+                boolean priceChanged = currentPrice.getPrice().compareTo(priceRequest.getPrice()) != 0;
+
+                if (priceChanged) {
+                    // Price changed: require note, deactivate old, create new
+                    if (priceRequest.getNote() == null || priceRequest.getNote().trim().isBlank()) {
+                        throw new ValidationException("item.note.required.when.price.changed");
+                    }
+
+                    // Deactivate old price
+                    currentPrice.setEffectiveTo(LocalDateTime.now());
+                    currentPrice.setNotes(priceRequest.getNote());
+                    currentPrice.setIsActive(false);
+                    itemPriceRepo.saveAndFlush(currentPrice);
+
+                    // Create new active price
+                    ItemPrice itemPrice = ItemPrice.builder()
+                            .price(priceRequest.getPrice())
+                            .quantity(priceRequest.getQuantity())
+                            .perfumeSize(priceRequest.getPerfumeSize())
+                            .isActive(priceRequest.getIsActive())
+                            .item(item)
+                            .build();
+                    itemPriceRepo.save(itemPrice);
+                } else {
+                    // Price unchanged: update quantity and status only
+                    currentPrice.setQuantity(priceRequest.getQuantity());
+                    currentPrice.setIsActive(priceRequest.getIsActive());
+                    itemPriceRepo.save(currentPrice);
+                }
+            } else {
+                // No active price exists: create new one
+                ItemPrice newPrice = ItemPrice.builder()
+                        .price(priceRequest.getPrice())
+                        .quantity(priceRequest.getQuantity())
+                        .perfumeSize(priceRequest.getPerfumeSize())
+                        .isActive(priceRequest.getIsActive())
+                        .item(item)
+                        .build();
+                itemPriceRepo.save(newPrice);
+            }
+
+            processedSizes.add(priceRequest.getPerfumeSize());
         }
 
-        if (priceChanged || currentPrice == null) {
-            if (currentPrice != null) {
+        // Deactivate sizes that are no longer in the request
+        List<ItemPrice> currentActivePrices = itemPriceRepo.findByItemIdAndIsActiveTrue(item.getId());
+        for (ItemPrice currentPrice : currentActivePrices) {
+            if (!processedSizes.contains(currentPrice.getPerfumeSize())) {
                 currentPrice.setEffectiveTo(LocalDateTime.now());
-                currentPrice.setNotes(updatePerfumeRequest.getNote());
                 currentPrice.setIsActive(false);
                 itemPriceRepo.save(currentPrice);
             }
-
-            ItemPrice itemPrice = ItemPrice.builder()
-                    .price(updatePerfumeRequest.getPrice())
-                    .item(item)
-                    .build();
-            itemPriceRepo.save(itemPrice);
         }
 
         // Update translations
@@ -344,7 +423,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
     private AdminPerfumeCardDTO mapToAdminPerfumeCard(
             Perfume perfume,
             PerfumeImage primaryImage,
-            ItemPrice price,
+            ItemPrice lowestPrice,
             ItemTranslation translation
     ) {
         Item item = perfume.getItem();
@@ -353,21 +432,16 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             throw new NotFoundException("image.not.found");
         }
 
-        AdminPerfumeCardDTO.AdminPerfumeCardDTOBuilder builder = AdminPerfumeCardDTO.builder()
+        return AdminPerfumeCardDTO.builder()
                 .id(perfume.getId())
                 .name(item.getName())
                 .brand(item.getBrand())
                 .active(item.getActive())
-                .quantity(item.getQuantity())
-                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId());
-
-        Optional.ofNullable(price)
-                .ifPresent(p -> builder.currentPrice(p.getPrice()));
-
-        Optional.ofNullable(translation)
-                .ifPresent(t -> builder.translatedName(t.getName()));
-
-        return builder.build();
+                .lowestPrice(lowestPrice.getPrice())
+                .quantity(lowestPrice.getQuantity())
+                .translatedName(translation != null ? translation.getName() : item.getName())
+                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                .build();
     }
 
     private void validateCreatePerfumeRequest(
@@ -376,6 +450,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             Integer primaryImageIndex,
             List<Integer> imageOrder
     ){
+        // Validate images presence and count
         if (images == null || images.isEmpty()){
             throw new ValidationException("images.perfume.required");
         }
@@ -384,10 +459,12 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             throw new MaxImagesExceededException("image.perfume.limit.exceeded");
         }
 
+        // Validate image order
         if (imageOrder == null || imageOrder.size() != images.size()) {
             throw new ValidationException("image.order.size.mismatch");
         }
 
+        // Validate primary image index
         if (primaryImageIndex == null) {
             throw new ValidationException("image.primary.required");
         }
@@ -396,14 +473,70 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             throw new ValidationException("image.primary.index.invalid");
         }
 
+        // Validate image order values are unique and sequential
         Set<Integer> orderSet = new HashSet<>(imageOrder);
         if (orderSet.size() != images.size() ||
                 !orderSet.containsAll(IntStream.range(0, images.size()).boxed().toList())) {
             throw new ValidationException("image.order.invalid");
         }
 
+        // Check for duplicate perfume (name + brand)
         if (itemRepo.existsByNameAndBrand(createPerfumeRequest.getName(), createPerfumeRequest.getBrand())) {
             throw new AlreadyExistsException("item.already.exists");
+        }
+
+        // Validate no duplicate perfume sizes
+        Set<PerfumeSize> uniqueSizes = new HashSet<>();
+        for (CreatePerfumePriceRequest price : createPerfumeRequest.getPrices()) {
+            if (!uniqueSizes.add(price.getPerfumeSize())) {
+                throw new ValidationException(
+                        "perfume.prices.duplicate.size",
+                        new Object[]{price.getPerfumeSize().name()}
+                );
+            }
+        }
+    }
+
+    private void validateActiveStatusConsistency(UpdatePerfumeRequest request) {
+        // Active perfume must have at least one available price
+        if (Boolean.TRUE.equals(request.getActive())) {
+            boolean hasAvailablePrice = request.getPrices().stream()
+                    .anyMatch(p -> Boolean.TRUE.equals(p.getIsActive()) && p.getQuantity() > 0);
+
+            if (!hasAvailablePrice) {
+                throw new ValidationException("perfume.active.must.have.available.price");
+            }
+        }
+
+        // Inactive perfume cannot have active prices
+        if (Boolean.FALSE.equals(request.getActive())) {
+            boolean hasActivePrice = request.getPrices().stream()
+                    .anyMatch(p -> Boolean.TRUE.equals(p.getIsActive()));
+
+            if (hasActivePrice) {
+                throw new ValidationException("perfume.inactive.cannot.have.active.prices");
+            }
+        }
+
+        // Active price cannot have zero quantity
+        for (UpdatePerfumePriceRequest price : request.getPrices()) {
+            if (Boolean.TRUE.equals(price.getIsActive()) && price.getQuantity() == 0) {
+                throw new ValidationException(
+                        "perfume.price.active.requires.quantity",
+                        new Object[]{price.getPerfumeSize().name()}
+                );
+            }
+        }
+
+        // Validate no duplicate perfume sizes
+        Set<PerfumeSize> uniqueSizes = new HashSet<>();
+        for (UpdatePerfumePriceRequest price : request.getPrices()) {
+            if (!uniqueSizes.add(price.getPerfumeSize())) {
+                throw new ValidationException(
+                        "perfume.prices.duplicate.size",
+                        new Object[]{price.getPerfumeSize().name()}
+                );
+            }
         }
     }
 

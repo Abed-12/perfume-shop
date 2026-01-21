@@ -1,9 +1,9 @@
 package com.abed.perfumeshop.admin.controller;
 
-import com.abed.perfumeshop.admin.dto.AdminDTO;
-import com.abed.perfumeshop.admin.dto.AdminUpdateRequest;
+import com.abed.perfumeshop.admin.dto.response.AdminDTO;
+import com.abed.perfumeshop.admin.dto.request.AdminUpdateRequest;
 import com.abed.perfumeshop.admin.service.AdminProfileService;
-import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
+import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.res.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

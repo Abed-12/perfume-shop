@@ -1,10 +1,14 @@
 package com.abed.perfumeshop.customer.controller;
 
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.OrderStatus;
 import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.customer.service.CustomerOrderService;
-import com.abed.perfumeshop.order.dto.*;
+import com.abed.perfumeshop.order.dto.request.CancelCustomerOrderRequest;
+import com.abed.perfumeshop.order.dto.request.CreateCustomerOrderRequest;
+import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.OrderResponseDTO;
+import com.abed.perfumeshop.order.dto.response.OrderSummaryDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

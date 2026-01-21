@@ -1,14 +1,16 @@
 package com.abed.perfumeshop.Item.service.impl;
 
-import com.abed.perfumeshop.Item.dto.PerfumeCardDTO;
-import com.abed.perfumeshop.Item.dto.PerfumeDetailDTO;
+import com.abed.perfumeshop.Item.dto.response.PerfumeCardDTO;
+import com.abed.perfumeshop.Item.dto.response.PerfumeDetailDTO;
 import com.abed.perfumeshop.Item.entity.*;
 import com.abed.perfumeshop.Item.repo.ItemPriceRepo;
 import com.abed.perfumeshop.Item.repo.ItemTranslationRepo;
 import com.abed.perfumeshop.Item.repo.PerfumeImageRepo;
 import com.abed.perfumeshop.Item.repo.PerfumeRepo;
 import com.abed.perfumeshop.Item.service.PublicPerfumeService;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
+import com.abed.perfumeshop.common.enums.PerfumeSeason;
+import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
@@ -19,9 +21,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,8 +40,15 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<PerfumeCardDTO> getActivePerfumes(int page, int size) {
-        Page<Perfume> perfumesPage = perfumeRepo.findByItem_ActiveTrue(PageRequest.of(page, size));
+    public PageResponse<PerfumeCardDTO> getActivePerfumes(
+            int page,
+            int size,
+            PerfumeType perfumeType,
+            PerfumeSeason perfumeSeason
+    ) {
+        // Convert PerfumeSeason to String (or null)
+        String perfumeSeasonString = perfumeSeason != null ? perfumeSeason.name() : null;
+        Page<Perfume> perfumesPage = perfumeRepo.findActiveWithFilters(perfumeType, perfumeSeasonString, PageRequest.of(page, size));
 
         return buildPerfumeCardResponse(perfumesPage);
     }
@@ -57,27 +66,42 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                 .map(image -> BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + image.getId())
                 .toList();
 
-        PerfumeDetailDTO.PerfumeDetailDTOBuilder detailBuilder = PerfumeDetailDTO.builder()
+        // Get all available sizes with prices
+        List<PerfumeDetailDTO.SizeOptionDTO> availableSizes = itemPriceRepo
+                .findByItemIdAndIsActiveTrue(item.getId())
+                .stream()
+                .map(itemPrice -> PerfumeDetailDTO.SizeOptionDTO.builder()
+                        .size(enumLocalizationService.getLocalizedName(itemPrice.getPerfumeSize()))
+                        .price(itemPrice.getPrice())
+                        .quantity(itemPrice.getQuantity())
+                        .available(itemPrice.getQuantity() > 0)
+                        .build())
+                .toList();
+
+        // Get translation
+        ItemTranslation translation = itemTranslationRepo
+                .findByItemIdAndLocale(item.getId(), LocaleContextHolder.getLocale().getLanguage())
+                .orElse(null);
+
+        // Convert comma-separated perfume seasons to localized string
+        String localizedSeasons = Arrays.stream(perfume.getPerfumeSeasons().split(","))
+                .map(String::trim)
+                .map(PerfumeSeason::valueOf)
+                .map(enumLocalizationService::getLocalizedName)
+                .collect(Collectors.joining(", "));
+
+        return PerfumeDetailDTO.builder()
                 .id(perfume.getId())
                 .name(item.getName())
-                .quantity(item.getQuantity())
                 .brand(item.getBrand())
                 .active(item.getActive())
-                .size(enumLocalizationService.getLocalizedName(perfume.getPerfumeSize()))
+                .translatedName(translation != null ? translation.getName() : item.getName())
+                .description(translation != null ? translation.getDescription() : null)
                 .perfumeType(enumLocalizationService.getLocalizedName(perfume.getPerfumeType()))
-                .perfumeSeason(enumLocalizationService.getLocalizedName(perfume.getPerfumeSeason()))
-                .imageUrls(imageUrls);
-
-        itemPriceRepo.findCurrentActivePriceByItemId(item.getId())
-                .ifPresent(price -> detailBuilder.currentPrice(price.getPrice()));
-
-        itemTranslationRepo.findByItemIdAndLocale(item.getId(), LocaleContextHolder.getLocale().getLanguage())
-                .ifPresent(translation -> {
-                    detailBuilder.translatedName(translation.getName());
-                    detailBuilder.description(translation.getDescription());
-                });
-
-         return detailBuilder.build();
+                .perfumeSeason(localizedSeasons)
+                .imageUrls(imageUrls)
+                .availableSizes(availableSizes)
+                .build();
     }
 
     @Override
@@ -91,7 +115,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
             throw new ValidationException("perfume.search.keyword.too.short");
         }
 
-        Page<Perfume> perfumesPage = perfumeRepo.searchPerfumes(keyword, PageRequest.of(page, size));
+        Page<Perfume> perfumesPage = perfumeRepo.searchActivePerfumes(keyword, PageRequest.of(page, size));
 
         return buildPerfumeCardResponse(perfumesPage);
     }
@@ -163,7 +187,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
     private PerfumeCardDTO mapToPerfumeCard(
             Perfume perfume,
             PerfumeImage primaryImage,
-            ItemPrice price,
+            ItemPrice lowestPrice,
             ItemTranslation translation
     ) {
         Item item = perfume.getItem();
@@ -172,20 +196,15 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
             throw new NotFoundException("image.not.found");
         }
 
-        PerfumeCardDTO.PerfumeCardDTOBuilder builder = PerfumeCardDTO.builder()
+        return PerfumeCardDTO.builder()
                 .id(perfume.getId())
                 .name(item.getName())
                 .brand(item.getBrand())
                 .active(item.getActive())
-                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId());
-
-        Optional.ofNullable(price)
-                .ifPresent(p -> builder.currentPrice(p.getPrice()));
-
-        Optional.ofNullable(translation)
-                .ifPresent(t -> builder.translatedName(t.getName()));
-
-        return builder.build();
+                .lowestPrice(lowestPrice.getPrice())
+                .translatedName(translation != null ? translation.getName() : item.getName())
+                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                .build();
     }
 
 }

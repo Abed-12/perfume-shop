@@ -10,8 +10,8 @@ import com.abed.perfumeshop.Item.repo.PerfumeRepo;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.customer.entity.Customer;
-import com.abed.perfumeshop.order.dto.CustomerOrderDetailDTO;
-import com.abed.perfumeshop.order.dto.GuestOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
+import com.abed.perfumeshop.order.dto.response.GuestOrderDetailDTO;
 import com.abed.perfumeshop.order.entity.CustomerOrder;
 import com.abed.perfumeshop.order.entity.GuestOrder;
 import com.abed.perfumeshop.order.entity.Order;
@@ -108,7 +108,7 @@ public class OrderDetailBuilder {
                     .translatedName(itemTranslation.getName())
                     .brand(item.getBrand())
                     .quantity(orderItem.getQuantity())
-                    .size(enumLocalizationService.getLocalizedName(perfume.getPerfumeSize()))
+                    .size(enumLocalizationService.getLocalizedName(orderItem.getPerfumeSize()))
                     .unitPrice(orderItem.getUnitPrice())
                     .subtotal(itemSubtotal)
                     .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
@@ -237,7 +237,7 @@ public class OrderDetailBuilder {
                     .translatedName(itemTranslation.getName())
                     .brand(item.getBrand())
                     .quantity(orderItem.getQuantity())
-                    .size(enumLocalizationService.getLocalizedName(perfume.getPerfumeSize()))
+                    .size(enumLocalizationService.getLocalizedName(orderItem.getPerfumeSize()))
                     .unitPrice(orderItem.getUnitPrice())
                     .subtotal(itemSubtotal)
                     .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())

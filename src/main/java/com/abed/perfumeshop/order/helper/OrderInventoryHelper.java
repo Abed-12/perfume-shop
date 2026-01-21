@@ -1,7 +1,10 @@
 package com.abed.perfumeshop.order.helper;
 
 import com.abed.perfumeshop.Item.entity.Item;
+import com.abed.perfumeshop.Item.entity.ItemPrice;
+import com.abed.perfumeshop.Item.repo.ItemPriceRepo;
 import com.abed.perfumeshop.Item.repo.ItemRepo;
+import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.coupon.repo.CouponRepo;
 import com.abed.perfumeshop.coupon.repo.CouponUsageRepo;
 import com.abed.perfumeshop.order.entity.CustomerOrder;
@@ -20,6 +23,7 @@ public class OrderInventoryHelper {
 
     private final OrderItemRepo orderItemRepo;
     private final ItemRepo itemRepo;
+    private final ItemPriceRepo itemPriceRepo;
     private final CustomerOrderRepo customerOrderRepo;
     private final CouponUsageRepo couponUsageRepo;
     private final CouponRepo couponRepo;
@@ -31,16 +35,24 @@ public class OrderInventoryHelper {
         orderItems.forEach(orderItem -> {
             Item item = orderItem.getItem();
 
+            // Find the specific size that was ordered
+            ItemPrice itemPrice = itemPriceRepo
+                    .findFirstByItemIdAndPerfumeSizeOrderByEffectiveFromDesc(item.getId(), orderItem.getPerfumeSize())
+                    .orElseThrow(() -> new NotFoundException("itemPrice.not.found"));
+
             // Add back the ordered quantity to inventory
-            int newQuantity = item.getQuantity() + orderItem.getQuantity();
-            item.setQuantity(newQuantity);
+            int newQuantity = itemPrice.getQuantity() + orderItem.getQuantity();
+            itemPrice.setQuantity(newQuantity);
 
             // Auto-reactivate if item now has stock
-            if (!item.getActive() && newQuantity > 0) {
-                item.setActive(true);
+            if (!itemPrice.getIsActive() && newQuantity > 0) {
+                itemPrice.setIsActive(true);
             }
 
-            itemRepo.save(item);
+            itemPriceRepo.save(itemPrice);
+
+            // Check if item should be reactivated
+            checkAndReactivateItemIfNeeded(item);
         });
 
         // Remove coupon usage and decrease usage count
@@ -61,6 +73,20 @@ public class OrderInventoryHelper {
 
                     couponRepo.save(coupon);
                 });
+    }
+
+    // ========== Private Helper Methods ==========
+    private void checkAndReactivateItemIfNeeded(Item item) {
+        // Check if any size is now available
+        boolean hasAvailableSize = itemPriceRepo.findByItemIdAndIsActiveTrue(item.getId())
+                .stream()
+                .anyMatch(ip -> ip.getQuantity() > 0);
+
+        // Reactivate item if it was deactivated and now has available sizes
+        if (!item.getActive() && hasAvailableSize) {
+            item.setActive(true);
+            itemRepo.save(item);
+        }
     }
 
 }

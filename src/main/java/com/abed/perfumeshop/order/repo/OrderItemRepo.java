@@ -15,9 +15,9 @@ public interface OrderItemRepo extends JpaRepository<OrderItem, Long> {
 
     List<OrderItem> findByOrder_OrderNumber(String orderNumber);
 
-    @Query("SELECT oi.order.id AS orderId, COUNT(oi) AS itemCount FROM OrderItem oi " +
+    @Query("SELECT oi.order.orderNumber AS orderNumber, COUNT(oi) AS itemCount FROM OrderItem oi " +
             "WHERE oi.order IN :orders " +
-            "GROUP BY oi.order.id")
+            "GROUP BY oi.order.orderNumber")
     List<OrderItemCount> countItemsByOrders(@Param("orders") List<Order> orders);
 
 }

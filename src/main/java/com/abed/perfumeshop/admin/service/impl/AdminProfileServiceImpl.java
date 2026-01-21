@@ -1,16 +1,17 @@
 package com.abed.perfumeshop.admin.service.impl;
 
-import com.abed.perfumeshop.admin.dto.AdminDTO;
-import com.abed.perfumeshop.admin.dto.AdminUpdateRequest;
+import com.abed.perfumeshop.admin.dto.response.AdminDTO;
+import com.abed.perfumeshop.admin.dto.request.AdminUpdateRequest;
 import com.abed.perfumeshop.admin.entity.Admin;
 import com.abed.perfumeshop.admin.repo.AdminRepo;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.admin.service.AdminProfileService;
-import com.abed.perfumeshop.common.dto.UpdatePasswordRequest;
+import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
-import com.abed.perfumeshop.notification.dto.NotificationDTO;
+import com.abed.perfumeshop.customer.repo.CustomerRepo;
+import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -27,6 +28,7 @@ public class AdminProfileServiceImpl implements AdminProfileService {
 
     private final AdminRepo adminRepo;
     private final AdminHelper adminHelper;
+    private final CustomerRepo customerRepo;
     private final NotificationSenderFacade notificationSenderFacade;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -47,7 +49,8 @@ public class AdminProfileServiceImpl implements AdminProfileService {
     public void updateMyProfile(AdminUpdateRequest adminUpdateRequest) {
         Admin admin = adminHelper.getCurrentLoggedInUser();
 
-        if (adminRepo.existsByEmailAndIdNot(adminUpdateRequest.getEmail(), admin.getId())) {
+        if (adminRepo.existsByEmailAndIdNot(adminUpdateRequest.getEmail(), admin.getId())
+                || customerRepo.existsByEmail(adminUpdateRequest.getEmail())) {
             throw new AlreadyExistsException("user.email.already.exists");
         }
 

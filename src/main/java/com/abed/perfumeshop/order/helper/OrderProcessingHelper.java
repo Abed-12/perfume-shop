@@ -6,7 +6,7 @@ import com.abed.perfumeshop.Item.repo.ItemPriceRepo;
 import com.abed.perfumeshop.Item.repo.ItemRepo;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.OutOfStockException;
-import com.abed.perfumeshop.order.dto.OrderItemRequest;
+import com.abed.perfumeshop.order.dto.request.OrderItemRequest;
 import com.abed.perfumeshop.order.entity.Order;
 import com.abed.perfumeshop.order.entity.OrderItem;
 import com.abed.perfumeshop.order.repo.OrderItemRepo;
@@ -32,19 +32,23 @@ public class OrderProcessingHelper {
             Item item = itemRepo.findById(itemRequest.getItemId())
                     .orElseThrow(() -> new NotFoundException("item.not.found"));
 
-            validateItemAvailability(item, itemRequest.getQuantity());
+            // Get specific size item price
+            ItemPrice itemPrice = itemPriceRepo.findByItemIdAndPerfumeSizeAndIsActiveTrue(
+                    item.getId(),
+                    itemRequest.getPerfumeSize()
+            ).orElseThrow(() -> new NotFoundException("item.price.not.found"));
 
-            // Get current item price
-            ItemPrice itemPrice = itemPriceRepo.findCurrentActivePriceByItemId(item.getId())
-                    .orElseThrow(() -> new NotFoundException("item.price.not.found"));
+            // Validate availability
+            validateItemAvailability(item, itemPrice, itemRequest.getQuantity());
 
             // Update item quantity
-            updateItemQuantity(item, itemRequest.getQuantity());
+            updateItemQuantity(itemPrice, itemRequest.getQuantity());
 
             // Create and save order item
             OrderItem orderItem = OrderItem.builder()
                     .quantity(itemRequest.getQuantity())
                     .unitPrice(itemPrice.getPrice())
+                    .perfumeSize(itemRequest.getPerfumeSize())
                     .order(order)
                     .item(item)
                     .build();
@@ -60,32 +64,50 @@ public class OrderProcessingHelper {
     }
 
     // ========== Private Helper Methods ==========
-    private void validateItemAvailability(Item item, int requestedQuantity) {
+    private void validateItemAvailability(Item item, ItemPrice itemPrice, int requestedQuantity) {
+        // Check if item is active
         if (!item.getActive()) {
             throw new OutOfStockException("item.inactive", new Object[]{item.getName()});
         }
 
-        if (item.getQuantity() < requestedQuantity){
+        if (itemPrice.getQuantity() < requestedQuantity){
             throw new OutOfStockException(
                     "item.insufficient.stock",
                     new Object[]{
                             item.getName(),
-                            item.getQuantity(),
+                            itemPrice.getPerfumeSize(),
+                            itemPrice.getQuantity(),
                             requestedQuantity
                     }
             );
         }
     }
 
-    private void updateItemQuantity(Item item, int quantity) {
-        int newQuantity = item.getQuantity() - quantity;
-        item.setQuantity(newQuantity);
+    private void updateItemQuantity(ItemPrice itemPrice, int quantity) {
+        int newQuantity = itemPrice.getQuantity() - quantity;
+        itemPrice.setQuantity(newQuantity);
 
+        // Deactivate size if out of stock
         if (newQuantity == 0) {
-            item.setActive(false);
+            itemPrice.setIsActive(false);
         }
 
-        itemRepo.save(item);
+        itemPriceRepo.save(itemPrice);
+
+        // Check if all sizes are out of stock
+        checkAndDeactivateItemIfNeeded(itemPrice.getItem());
     }
 
+    private void checkAndDeactivateItemIfNeeded(Item item) {
+        // Check if any size is still available
+        boolean hasAvailableSize = itemPriceRepo.findByItemIdAndIsActiveTrue(item.getId())
+                .stream()
+                .anyMatch(ip -> ip.getQuantity() > 0);
+
+        // If no sizes available, deactivate the item
+        if (!hasAvailableSize) {
+            item.setActive(false);
+            itemRepo.save(item);
+        }
+    }
 }

@@ -2,9 +2,9 @@ package com.abed.perfumeshop.admin.service.impl;
 
 import com.abed.perfumeshop.admin.service.AdminCustomerService;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
-import com.abed.perfumeshop.common.dto.PageResponse;
+import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
-import com.abed.perfumeshop.customer.dto.CustomerDTO;
+import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
 import lombok.RequiredArgsConstructor;
