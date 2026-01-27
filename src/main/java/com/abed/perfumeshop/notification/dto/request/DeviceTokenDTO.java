@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.notification.dto.request;
 
+import com.abed.perfumeshop.common.enums.DeviceType;
 import lombok.*;
 
 @Getter
@@ -10,7 +11,9 @@ import lombok.*;
 public class DeviceTokenDTO {
 
     private String token;
-    private String deviceType;
+
+    private DeviceType deviceType;
+
     private String deviceName;
 
 }

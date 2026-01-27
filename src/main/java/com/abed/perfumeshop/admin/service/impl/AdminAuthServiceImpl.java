@@ -10,11 +10,11 @@ import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.enums.UserType;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.passwordResetCode.entity.PasswordResetCode;
 import com.abed.perfumeshop.passwordResetCode.repo.PasswordResetCodeRepo;
-import com.abed.perfumeshop.passwordResetCode.service.CodeGenerator;
+import com.abed.perfumeshop.common.service.CodeGenerator;
 import com.abed.perfumeshop.config.security.service.JwtService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -86,7 +86,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         templateVariables.put("name", admin.getFirstName());
         templateVariables.put("resetLink", resetLink + code);
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.reset.subject", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-reset")
@@ -94,7 +94,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
         Map<String, Object> templateVariables = new HashMap<>();
         templateVariables.put("name", admin.getFirstName());
 
-        NotificationDTO confirmationEmail = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.update", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-update-confirmation")
@@ -135,7 +135,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(confirmationEmail);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

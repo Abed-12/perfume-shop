@@ -1,6 +1,5 @@
 package com.abed.perfumeshop.notification.entity;
 
-import com.abed.perfumeshop.common.enums.DeviceType;
 import com.abed.perfumeshop.common.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,17 +11,14 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@Table(name = "device_tokens")
+@Table(name = "user_notifications")
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeviceToken {
+public class UserNotification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true)
-    private String token;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false)
@@ -31,15 +27,18 @@ public class DeviceToken {
     @Column(nullable = false, updatable = false)
     private Long userId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, updatable = false)
-    private DeviceType deviceType;
+    @ManyToOne
+    @JoinColumn(nullable = false, updatable = false)
+    private Notification notification;
 
-    @Column(nullable = false, updatable = false)
-    private String deviceName;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean seen = false;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime receivedAt;
+
+    private LocalDateTime seenAt;
 
 }

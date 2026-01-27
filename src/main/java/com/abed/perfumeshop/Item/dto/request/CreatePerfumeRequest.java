@@ -33,4 +33,11 @@ public class CreatePerfumeRequest {
     @NotEmpty(message = "{perfume.prices.required}")
     private List<CreatePerfumePriceRequest> prices;
 
+    @NotNull(message = "{image.primary.required}")
+    @Min(value = 0, message = "{image.primary.index.invalid}")
+    private Integer primaryImageIndex;
+
+    @NotEmpty(message = "{image.order.required}")
+    private List<Integer> imageOrder;
+
 }

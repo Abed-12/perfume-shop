@@ -11,7 +11,7 @@ import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.entity.Customer;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.dto.response.AdminOrderSummaryDTO;
 import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
@@ -301,7 +301,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         templateVariables.put("trackingLink", trackingLink);
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(recipientEmail)
                 .subject(messageSource.getMessage("notification.order.status.update.subject",
                         null,
@@ -312,7 +312,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

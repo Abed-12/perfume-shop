@@ -6,7 +6,7 @@ import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.notification.service.CouponNotificationService;
-import com.abed.perfumeshop.passwordResetCode.service.CodeGenerator;
+import com.abed.perfumeshop.common.service.CodeGenerator;
 import com.abed.perfumeshop.coupon.dto.request.CouponRequest;
 import com.abed.perfumeshop.coupon.dto.response.CouponResponse;
 import com.abed.perfumeshop.coupon.entity.Coupon;

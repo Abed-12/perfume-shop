@@ -4,7 +4,7 @@ import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.projection.EmailRecipientProjection;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.CouponNotificationService ;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.repo.GuestOrderRepo;
@@ -69,7 +69,7 @@ public class CouponNotificationServiceImpl implements CouponNotificationService 
         templateVariables.put("maxUsage", coupon.getMaxUsage());
         templateVariables.put("needsLogin", !recipient.getIsCustomer());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(recipient.getEmail())
                 .subject(messageSource.getMessage("notification.coupon.subject", null, locale))
                 .templateName(locale.getLanguage() + "/coupon-distribution")
@@ -78,7 +78,7 @@ public class CouponNotificationServiceImpl implements CouponNotificationService 
                 .coupon(coupon)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

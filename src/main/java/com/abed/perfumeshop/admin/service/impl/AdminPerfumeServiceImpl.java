@@ -73,13 +73,11 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
     @Transactional
     public void createPerfume(
             CreatePerfumeRequest createPerfumeRequest,
-            List<MultipartFile> images,
-            Integer primaryImageIndex,
-            List<Integer> imageOrder
+            List<MultipartFile> images
     ) {
         adminHelper.getCurrentLoggedInUser();
 
-        validateCreatePerfumeRequest(createPerfumeRequest, images, primaryImageIndex, imageOrder);
+        validateCreatePerfumeRequest(createPerfumeRequest, images);
 
         // Create and save base item
         Item item = Item.builder()
@@ -129,12 +127,12 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
         for (int i = 0; i < images.size(); i++){
             MultipartFile image = images.get(i);
-            int displayOrder = imageOrder.get(i);
+            int displayOrder = createPerfumeRequest.getImageOrder().get(i);
 
             PerfumeImage perfumeImage = createPerfumeImageFromFile(
                     image,
                     perfume,
-                    i == primaryImageIndex,
+                    i == createPerfumeRequest.getPrimaryImageIndex(),
                     displayOrder
             );
             perfumeImages.add(perfumeImage);
@@ -446,9 +444,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
     private void validateCreatePerfumeRequest(
             CreatePerfumeRequest createPerfumeRequest,
-            List<MultipartFile> images,
-            Integer primaryImageIndex,
-            List<Integer> imageOrder
+            List<MultipartFile> images
     ){
         // Validate images presence and count
         if (images == null || images.isEmpty()){
@@ -460,23 +456,20 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
         }
 
         // Validate image order
-        if (imageOrder == null || imageOrder.size() != images.size()) {
+        if (createPerfumeRequest.getImageOrder().size() != images.size()) {
             throw new ValidationException("image.order.size.mismatch");
         }
 
-        // Validate primary image index
-        if (primaryImageIndex == null) {
-            throw new ValidationException("image.primary.required");
-        }
-
-        if (primaryImageIndex < 0 || primaryImageIndex >= images.size()) {
+        if (createPerfumeRequest.getPrimaryImageIndex() >= images.size()) {
             throw new ValidationException("image.primary.index.invalid");
         }
 
         // Validate image order values are unique and sequential
-        Set<Integer> orderSet = new HashSet<>(imageOrder);
-        if (orderSet.size() != images.size() ||
-                !orderSet.containsAll(IntStream.range(0, images.size()).boxed().toList())) {
+        Set<Integer> orderSet = new HashSet<>(createPerfumeRequest.getImageOrder());
+        Set<Integer> expectedOrders = IntStream.range(0, images.size())
+                .boxed()
+                .collect(Collectors.toSet());
+        if (!orderSet.equals(expectedOrders)) {
             throw new ValidationException("image.order.invalid");
         }
 

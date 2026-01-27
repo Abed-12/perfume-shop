@@ -1,10 +1,7 @@
 package com.abed.perfumeshop.customer.service.impl;
 
 import com.abed.perfumeshop.common.dto.response.PageResponse;
-import com.abed.perfumeshop.common.enums.CancellationSource;
-import com.abed.perfumeshop.common.enums.NotificationType;
-import com.abed.perfumeshop.common.enums.OrderStatus;
-import com.abed.perfumeshop.common.enums.OrderType;
+import com.abed.perfumeshop.common.enums.*;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.service.EnumLocalizationService;
@@ -15,7 +12,8 @@ import com.abed.perfumeshop.coupon.repo.CouponUsageRepo;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.helper.CustomerHelper;
 import com.abed.perfumeshop.customer.service.CustomerOrderService;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.PushNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.dto.request.CancelCustomerOrderRequest;
 import com.abed.perfumeshop.order.dto.request.CreateCustomerOrderRequest;
@@ -73,6 +71,12 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
 
     @Value("${order.tracking.link}")
     private String orderTrackingLink;
+
+    @Value("${notification.image.new-order}")
+    private String newOrderImageUrl;
+
+    @Value("${notification.image.cancelled}")
+    private String cancelledImageUrl;
 
     @Override
     @Transactional
@@ -137,11 +141,29 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
             recordCouponUsage(coupon, customer, order);
         }
 
+        // Get customer name
+        String customerName = customer.getFirstName() + " " + customer.getLastName();
+
         // Send push notification to admin
+        PushNotificationDTO pushNotificationDTO = PushNotificationDTO.builder()
+                .targetUserType(UserType.ADMIN)
+                .subject(messageSource.getMessage("notification.new.order.title", null, LocaleContextHolder.getLocale()))
+                .body(messageSource.getMessage(
+                        "notification.new.order.body",
+                        new Object[]{customerName, order.getOrderNumber()},
+                        LocaleContextHolder.getLocale()
+                ))
+                .order(order)
+                .data(Map.of("orderNumber", order.getOrderNumber()))
+                .imageUrl(newOrderImageUrl)
+                .type(NotificationType.PUSH)
+                .build();
+
+        notificationSenderFacade.send(pushNotificationDTO);
 
         // Send email to customer
         Map<String, Object> templateVariables = new HashMap<>();
-        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
+        templateVariables.put("name", customerName);
         templateVariables.put("orderNumber", order.getOrderNumber());
         templateVariables.put("totalPrice", String.format("%.2f", order.getTotalPrice()));
         templateVariables.put("orderDate", order.getOrderDate());
@@ -151,7 +173,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
             templateVariables.put("couponApplied", true);
         }
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.order.confirmation.subject", null, LocaleContextHolder.getLocale()))
                 .order(order)
@@ -161,7 +183,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
 
         return OrderResponseDTO.builder()
                 .orderNumber(order.getOrderNumber())
@@ -285,11 +307,29 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         // Restore inventory and reactivate if needed
         orderInventoryHelper.restoreInventory(orderNumber);
 
+        // Get customer name
+        String customerName = customer.getFirstName() + " " + customer.getLastName();
+
         // Send push notification to admin
+        PushNotificationDTO pushNotificationDTO = PushNotificationDTO.builder()
+                .targetUserType(UserType.ADMIN)
+                .subject(messageSource.getMessage("notification.order.cancelled.title", null, LocaleContextHolder.getLocale()))
+                .body(messageSource.getMessage(
+                        "notification.order.cancelled.body",
+                        new Object[]{customerName, order.getOrderNumber()},
+                        LocaleContextHolder.getLocale()
+                ))
+                .order(order)
+                .data(Map.of("orderNumber", order.getOrderNumber()))
+                .imageUrl(cancelledImageUrl)
+                .type(NotificationType.PUSH)
+                .build();
+
+        notificationSenderFacade.send(pushNotificationDTO);
 
         // Send email to customer
         Map<String, Object> templateVariables = new HashMap<>();
-        templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
+        templateVariables.put("name", customerName);
         templateVariables.put("orderNumber", order.getOrderNumber());
         templateVariables.put("newStatus", order.getStatus().name());
         templateVariables.put("totalPrice", String.format("%.2f", order.getTotalPrice()));
@@ -299,7 +339,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         templateVariables.put("deliveredAt", null);
         templateVariables.put("trackingLink", orderTrackingLink + order.getOrderNumber());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.order.status.update.subject", null, LocaleContextHolder.getLocale()))
                 .order(order)
@@ -308,7 +348,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
     // ========== Private Helper Methods ==========

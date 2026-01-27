@@ -62,11 +62,9 @@ public class AdminPerfumeController {
     @PostMapping
     public ResponseEntity<Response<Void>> createPerfume(
             @RequestPart @Valid CreatePerfumeRequest createPerfumeRequest,
-            @RequestPart List<MultipartFile> images,
-            @RequestParam Integer primaryImageIndex,
-            @RequestParam List<Integer> imageOrder
+            @RequestPart List<MultipartFile> images
     ) {
-        adminPerfumeService.createPerfume(createPerfumeRequest, images, primaryImageIndex, imageOrder);
+        adminPerfumeService.createPerfume(createPerfumeRequest, images);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(

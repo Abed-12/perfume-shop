@@ -13,13 +13,13 @@ import com.abed.perfumeshop.customer.dto.request.CustomerRegisterRequest;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
 import com.abed.perfumeshop.customer.service.CustomerAuthService;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.entity.GuestOrder;
 import com.abed.perfumeshop.order.repo.GuestOrderRepo;
 import com.abed.perfumeshop.passwordResetCode.entity.PasswordResetCode;
 import com.abed.perfumeshop.passwordResetCode.repo.PasswordResetCodeRepo;
-import com.abed.perfumeshop.passwordResetCode.service.CodeGenerator;
+import com.abed.perfumeshop.common.service.CodeGenerator;
 import com.abed.perfumeshop.config.security.service.JwtService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +88,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
         Map<String, Object> templateVariables = new HashMap<>();
         templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.welcome.subject", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/welcome")
@@ -96,7 +96,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
     @Override
@@ -141,7 +141,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
         templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
         templateVariables.put("resetLink", resetLink + code);
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.password.reset.subject", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-reset")
@@ -149,7 +149,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
     @Override
@@ -182,7 +182,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
         Map<String, Object> templateVariables = new HashMap<>();
         templateVariables.put("name", customer.getFirstName() + " " + customer.getLastName());
 
-        NotificationDTO confirmationEmail = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
                 .subject(messageSource.getMessage("notification.password.update", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-update-confirmation")
@@ -190,7 +190,7 @@ public class CustomerAuthServiceImpl implements CustomerAuthService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(confirmationEmail);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

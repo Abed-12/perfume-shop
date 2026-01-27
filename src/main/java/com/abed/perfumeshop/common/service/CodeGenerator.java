@@ -1,4 +1,4 @@
-package com.abed.perfumeshop.passwordResetCode.service;
+package com.abed.perfumeshop.common.service;
 
 import org.springframework.stereotype.Component;
 

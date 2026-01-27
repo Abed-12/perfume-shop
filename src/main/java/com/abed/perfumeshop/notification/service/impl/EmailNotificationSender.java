@@ -1,6 +1,7 @@
 package com.abed.perfumeshop.notification.service.impl;
 
 import com.abed.perfumeshop.common.enums.NotificationType;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
 import com.abed.perfumeshop.notification.entity.Notification;
 import com.abed.perfumeshop.notification.repo.NotificationRepo;
@@ -30,43 +31,20 @@ public class EmailNotificationSender implements NotificationSender {
     @Override
     @Async
     public void send(NotificationDTO notificationDTO) {
+        // Validate DTO type
+        if (!(notificationDTO instanceof EmailNotificationDTO emailNotificationDTO)) {
+            log.error("Invalid DTO type for EmailNotificationSender. Expected EmailNotificationDTO but got {}",
+                    notificationDTO.getClass().getSimpleName());
+            return;
+        }
+
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(
-                    mimeMessage,
-                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
-                    StandardCharsets.UTF_8.name()
-            );
+            // Send email to recipient
+            sendEmail(emailNotificationDTO);
 
-            helper.setTo(notificationDTO.getRecipient());
-            helper.setSubject(notificationDTO.getSubject());
-
-            // Use template if provided
-            if (notificationDTO.getTemplateName() != null){
-                Context context = new Context();
-                context.setVariables(notificationDTO.getTemplateVariables());
-                String htmlContent = templateEngine.process(notificationDTO.getTemplateName(), context);
-                helper.setText(htmlContent , true);
-            } else {
-                // If no template send text body directly
-                helper.setText(notificationDTO.getBody(), true);
-            }
-
-            mailSender.send(mimeMessage);
-
-            // Save to our database table
-            Notification notificationToSave = Notification.builder()
-                    .subject(notificationDTO.getSubject())
-                    .recipient(notificationDTO.getRecipient())
-                    .body(notificationDTO.getBody())
-                    .type(NotificationType.EMAIL)
-                    .order(notificationDTO.getOrder())
-                    .coupon(notificationDTO.getCoupon())
-                    .build();
-
-            notificationRepo.save(notificationToSave);
-
-        } catch (MessagingException e) {
+            // Save notification to database
+            saveNotification(emailNotificationDTO);
+        } catch (Exception e) {
             log.error(e.getMessage());
         }
     }
@@ -74,6 +52,51 @@ public class EmailNotificationSender implements NotificationSender {
     @Override
     public NotificationType getType() {
         return NotificationType.EMAIL;
+    }
+
+    // ========== Private Helper Methods ==========
+    private void sendEmail(EmailNotificationDTO emailNotificationDTO) throws MessagingException {
+        // Create and configure email message
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(
+                mimeMessage,
+                MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                StandardCharsets.UTF_8.name()
+        );
+
+        helper.setTo(emailNotificationDTO.getRecipient());
+        helper.setSubject(emailNotificationDTO.getSubject());
+
+        // Use template if provided
+        if (emailNotificationDTO.getTemplateName() != null){
+            Context context = new Context();
+            context.setVariables(emailNotificationDTO.getTemplateVariables());
+            String htmlContent = templateEngine.process(emailNotificationDTO.getTemplateName(), context);
+            helper.setText(htmlContent , true);
+        } else {
+            // If no template send text body directly
+            helper.setText(emailNotificationDTO.getBody(), true);
+        }
+
+        // Send email
+        mailSender.send(mimeMessage);
+    }
+
+    private void saveNotification(EmailNotificationDTO emailNotificationDTO) {
+        try {
+            Notification notificationToSave = Notification.builder()
+                    .subject(emailNotificationDTO.getSubject())
+                    .recipient(emailNotificationDTO.getRecipient())
+                    .body(emailNotificationDTO.getBody())
+                    .type(NotificationType.EMAIL)
+                    .order(emailNotificationDTO.getOrder())
+                    .coupon(emailNotificationDTO.getCoupon())
+                    .build();
+
+            notificationRepo.save(notificationToSave);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
 }

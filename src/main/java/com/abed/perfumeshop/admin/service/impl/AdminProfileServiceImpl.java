@@ -11,7 +11,7 @@ import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
@@ -81,7 +81,7 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         Map<String, Object> templateVariables = new HashMap<>();
         templateVariables.put("name", admin.getFirstName());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(admin.getEmail())
                 .subject(messageSource.getMessage("notification.password.changed.subject", null, LocaleContextHolder.getLocale()))
                 .templateName(LocaleContextHolder.getLocale().getLanguage() + "/password-change")
@@ -89,7 +89,7 @@ public class AdminProfileServiceImpl implements AdminProfileService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

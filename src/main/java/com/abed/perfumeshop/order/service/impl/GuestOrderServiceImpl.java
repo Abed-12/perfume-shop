@@ -3,12 +3,14 @@ package com.abed.perfumeshop.order.service.impl;
 import com.abed.perfumeshop.common.enums.CancellationSource;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.enums.OrderStatus;
+import com.abed.perfumeshop.common.enums.UserType;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
-import com.abed.perfumeshop.notification.dto.response.NotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
+import com.abed.perfumeshop.notification.dto.response.PushNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
 import com.abed.perfumeshop.order.dto.request.CancelGuestOrderRequest;
 import com.abed.perfumeshop.order.dto.request.CreateGuestOrderRequest;
@@ -53,6 +55,12 @@ public class GuestOrderServiceImpl implements GuestOrderService {
     @Value("${order.tracking.link}")
     private String orderTrackingLink;
 
+    @Value("${notification.image.new-order}")
+    private String newOrderImageUrl;
+
+    @Value("${notification.image.cancelled}")
+    private String cancelledImageUrl;
+
     @Override
     @Transactional
     public OrderResponseDTO createGuestOrder(CreateGuestOrderRequest createGuestOrderRequest) {
@@ -95,6 +103,24 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         guestOrderRepo.save(guestOrder);
 
         // Send push notification to admin
+        PushNotificationDTO pushNotificationDTO = PushNotificationDTO.builder()
+                .targetUserType(UserType.ADMIN)
+                .subject(messageSource.getMessage("notification.new.order.title", null, LocaleContextHolder.getLocale()))
+                .body(messageSource.getMessage(
+                        "notification.new.order.body",
+                        new Object[]{createGuestOrderRequest.getUsername(), order.getOrderNumber()},
+                        LocaleContextHolder.getLocale()
+                ))
+                .order(order)
+                .data(Map.of(
+                        "orderNumber", order.getOrderNumber(),
+                        "email", createGuestOrderRequest.getEmail()
+                ))
+                .imageUrl(newOrderImageUrl)
+                .type(NotificationType.PUSH)
+                .build();
+
+        notificationSenderFacade.send(pushNotificationDTO);
 
         // Send email to guest
         Map<String, Object> templateVariables = new HashMap<>();
@@ -105,7 +131,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         templateVariables.put("trackingLink",
                 orderTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(createGuestOrderRequest.getEmail())
                 .subject(messageSource.getMessage("notification.order.confirmation.subject", null, LocaleContextHolder.getLocale()))
                 .order(order)
@@ -114,7 +140,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
 
         return OrderResponseDTO.builder()
                 .orderNumber(order.getOrderNumber())
@@ -164,6 +190,24 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         orderInventoryHelper.restoreInventory(orderNumber);
 
         // Send push notification to admin
+        PushNotificationDTO pushNotificationDTO = PushNotificationDTO.builder()
+                .targetUserType(UserType.ADMIN)
+                .subject(messageSource.getMessage("notification.order.cancelled.title", null, LocaleContextHolder.getLocale()))
+                .body(messageSource.getMessage(
+                        "notification.order.cancelled.body",
+                        new Object[]{guestOrder.getUsername(), order.getOrderNumber()},
+                        LocaleContextHolder.getLocale()
+                ))
+                .order(order)
+                .data(Map.of(
+                        "orderNumber", order.getOrderNumber(),
+                        "email", guestOrder.getEmail()
+                ))
+                .imageUrl(cancelledImageUrl)
+                .type(NotificationType.PUSH)
+                .build();
+
+        notificationSenderFacade.send(pushNotificationDTO);
 
         // Send email to guest
         Map<String, Object> templateVariables = new HashMap<>();
@@ -178,7 +222,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         templateVariables.put("trackingLink",
                 orderTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
 
-        NotificationDTO notificationDTO = NotificationDTO.builder()
+        EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(guestOrder.getEmail())
                 .subject(messageSource.getMessage("notification.order.status.update.subject", null, LocaleContextHolder.getLocale()))
                 .order(order)
@@ -187,7 +231,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
                 .type(NotificationType.EMAIL)
                 .build();
 
-        notificationSenderFacade.send(notificationDTO);
+        notificationSenderFacade.send(emailNotificationDTO);
     }
 
 }

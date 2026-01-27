@@ -16,7 +16,7 @@ public interface AdminPerfumeService {
 
     PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword);
 
-    void createPerfume(CreatePerfumeRequest createPerfumeRequest, List<MultipartFile> images, Integer primaryImageIndex, List<Integer> imageOrder);
+    void createPerfume(CreatePerfumeRequest createPerfumeRequest, List<MultipartFile> images);
 
     void updatePerfume(Long id, UpdatePerfumeRequest updatePerfumeRequest);
 
