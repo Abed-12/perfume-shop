@@ -115,11 +115,8 @@ public class PushNotificationSender implements NotificationSender {
             // Send push
             FirebaseMessaging.getInstance().send(message);
         } catch (FirebaseMessagingException e) {
-            // Auto-cleanup: Remove invalid or unregistered tokens
-            if (e.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT ||
-                    e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
-                deviceTokenRepo.findByToken(token).ifPresent(deviceTokenRepo::delete);
-            }
+            log.error("Failed to send notification to token: {}, error: {}",
+                    token, e.getMessagingErrorCode(), e);
         }
     }
 

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 @Builder
@@ -12,7 +13,7 @@ public class PerfumeCardDTO {
     private Long id;
 
     private String name;
-    private String translatedName;
+    private Map<String, String> translatedName;
     private String brand;
     private Boolean active;
 

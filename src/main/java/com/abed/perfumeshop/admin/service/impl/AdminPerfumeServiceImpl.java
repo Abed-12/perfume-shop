@@ -12,7 +12,6 @@ import com.abed.perfumeshop.common.enums.PerfumeSize;
 import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.exception.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
-    private static final String BASE_IMAGE_URL = "/api/public/perfumes";
+    private static final String BASE_IMAGE_URL = "/public/perfumes";
 
     private final ItemRepo itemRepo;
     private final PerfumeRepo perfumeRepo;
@@ -99,7 +99,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
         // Create and save translations for different locales
         List<ItemTranslation> translations = createPerfumeRequest.getTranslations().stream()
-                .map(translationRequest ->  ItemTranslation.builder()
+                .map(translationRequest -> ItemTranslation.builder()
                         .locale(translationRequest.getLocale())
                         .name(translationRequest.getName())
                         .description(translationRequest.getDescription())
@@ -125,7 +125,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
         // Create and save Perfume Images
         List<PerfumeImage> perfumeImages = new ArrayList<>();
 
-        for (int i = 0; i < images.size(); i++){
+        for (int i = 0; i < images.size(); i++) {
             MultipartFile image = images.get(i);
             int displayOrder = createPerfumeRequest.getImageOrder().get(i);
 
@@ -143,10 +143,10 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
     @Override
     @Transactional
-    public void updatePerfume(Long id, UpdatePerfumeRequest updatePerfumeRequest) {
+    public void updatePerfume(Long perfumeId, UpdatePerfumeRequest updatePerfumeRequest) {
         adminHelper.getCurrentLoggedInUser();
 
-        Perfume perfume = perfumeRepo.findById(id)
+        Perfume perfume = perfumeRepo.findById(perfumeId)
                 .orElseThrow(() -> new NotFoundException("perfume.not.found"));
 
         Item item = perfume.getItem();
@@ -202,6 +202,8 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                     currentPrice.setEffectiveTo(LocalDateTime.now());
                     currentPrice.setNotes(priceRequest.getNote());
                     currentPrice.setIsActive(false);
+                    /* Ensure the old price is immediately deactivated before adding a new active price
+                       Reason: Only one active price is allowed per size, so we must flush the old one first */
                     itemPriceRepo.saveAndFlush(currentPrice);
 
                     // Create new active price
@@ -319,7 +321,8 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
     public void updatePerfumeImage(
             Long perfumeId,
             Long imageId,
-            MultipartFile image
+            MultipartFile image,
+            Boolean isPrimary
     ) {
         adminHelper.getCurrentLoggedInUser();
 
@@ -337,8 +340,19 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             perfumeImage.setMimeType(image.getContentType());
             perfumeImage.setFileSize(image.getSize());
 
+            // Handle primary logic
+            if (isPrimary) {
+                perfumeImageRepo.findByPerfumeIdAndIsPrimaryTrue(perfumeId)
+                        .ifPresent(oldPerfumeImage -> {
+                            oldPerfumeImage.setIsPrimary(false);
+                            perfumeImageRepo.save(oldPerfumeImage);
+                        });
+
+                perfumeImage.setIsPrimary(true);
+            }
+
             perfumeImageRepo.save(perfumeImage);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new ImageProcessingException(
                     "image.processing.failed",
                     new Object[]{image.getOriginalFilename()}
@@ -375,10 +389,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
 
         List<PerfumeImage> primaryImages = perfumeImageRepo.findPrimaryImagesByPerfumeIds(perfumeIds);
         List<ItemPrice> allPrices = itemPriceRepo.findCurrentActivePricesByItemIds(itemIds);
-        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIdsAndLocale(
-                itemIds,
-                LocaleContextHolder.getLocale().getLanguage()
-        );
+        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIds(itemIds);
 
         Map<Long, PerfumeImage> primaryImageByPerfume = primaryImages.stream()
                 .collect(Collectors.toMap(
@@ -392,10 +403,13 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                         p -> p
                 ));
 
-        Map<Long, ItemTranslation> translationsByItem = allTranslations.stream()
-                .collect(Collectors.toMap(
+        Map<Long, Map<String, String>> translationsByItem = allTranslations.stream()
+                .collect(Collectors.groupingBy(
                         itemTranslation -> itemTranslation.getItem().getId(),
-                        t -> t
+                        Collectors.toMap(
+                                ItemTranslation::getLocale,
+                                ItemTranslation::getName
+                        )
                 ));
 
         List<AdminPerfumeCardDTO> perfumeCards = perfumes.stream()
@@ -422,7 +436,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             Perfume perfume,
             PerfumeImage primaryImage,
             ItemPrice lowestPrice,
-            ItemTranslation translation
+            Map<String, String> translations
     ) {
         Item item = perfume.getItem();
 
@@ -437,21 +451,21 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                 .active(item.getActive())
                 .lowestPrice(lowestPrice.getPrice())
                 .quantity(lowestPrice.getQuantity())
-                .translatedName(translation != null ? translation.getName() : item.getName())
-                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                .translatedName(translations)
+                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId() + "?v=" + primaryImage.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
                 .build();
     }
 
     private void validateCreatePerfumeRequest(
             CreatePerfumeRequest createPerfumeRequest,
             List<MultipartFile> images
-    ){
+    ) {
         // Validate images presence and count
-        if (images == null || images.isEmpty()){
+        if (images == null || images.isEmpty()) {
             throw new ValidationException("images.perfume.required");
         }
 
-        if (images.size() > 5){
+        if (images.size() > 5) {
             throw new MaxImagesExceededException("image.perfume.limit.exceeded");
         }
 

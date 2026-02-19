@@ -13,15 +13,15 @@ import com.abed.perfumeshop.common.enums.PerfumeSeason;
 import com.abed.perfumeshop.common.enums.PerfumeType;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,13 +30,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
-    private static final String BASE_IMAGE_URL = "/api/public/perfumes";
+    private static final String BASE_IMAGE_URL = "/public/perfumes";
 
     private final PerfumeRepo perfumeRepo;
     private final ItemPriceRepo itemPriceRepo;
     private final ItemTranslationRepo itemTranslationRepo;
     private final PerfumeImageRepo perfumeImageRepo;
-    private final EnumLocalizationService enumLocalizationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,23 +54,27 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
     @Override
     @Transactional(readOnly = true)
-    public PerfumeDetailDTO getPerfumeById(Long id) {
-        Perfume perfume = perfumeRepo.findById(id)
+    public PerfumeDetailDTO getPerfumeById(Long perfumeId) {
+        Perfume perfume = perfumeRepo.findById(perfumeId)
                 .orElseThrow( () -> new NotFoundException("perfume.not.found"));
 
         Item item = perfume.getItem();
 
         List<String> imageUrls = perfumeImageRepo.findByPerfumeIdOrderByDisplayOrder(perfume.getId())
                 .stream()
-                .map(image -> BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + image.getId())
+                .map(image -> BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + image.getId() + "?v=" + image.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
                 .toList();
+
+        String primaryImageUrl = perfumeImageRepo.findByPerfumeIdAndIsPrimaryTrue(perfume.getId())
+                .map(image -> BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + image.getId() + "?v=" + image.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
+                .orElse(null);
 
         // Get all available sizes with prices
         List<PerfumeDetailDTO.SizeOptionDTO> availableSizes = itemPriceRepo
                 .findByItemIdAndIsActiveTrue(item.getId())
                 .stream()
                 .map(itemPrice -> PerfumeDetailDTO.SizeOptionDTO.builder()
-                        .size(enumLocalizationService.getLocalizedName(itemPrice.getPerfumeSize()))
+                        .size(itemPrice.getPerfumeSize())
                         .price(itemPrice.getPrice())
                         .quantity(itemPrice.getQuantity())
                         .available(itemPrice.getQuantity() > 0)
@@ -79,26 +82,31 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                 .toList();
 
         // Get translation
-        ItemTranslation translation = itemTranslationRepo
-                .findByItemIdAndLocale(item.getId(), LocaleContextHolder.getLocale().getLanguage())
-                .orElse(null);
+        List<ItemTranslation> translations = itemTranslationRepo.findByItemIds(List.of(item.getId()));
+        Map<String, String> namesByLocale = new HashMap<>();
+        Map<String, String> descriptionsByLocale = new HashMap<>();
+
+        translations.forEach(t -> {
+            namesByLocale.put(t.getLocale(), t.getName());
+            descriptionsByLocale.put(t.getLocale(), t.getDescription());
+        });
 
         // Convert comma-separated perfume seasons to localized string
-        String localizedSeasons = Arrays.stream(perfume.getPerfumeSeasons().split(","))
+        List<PerfumeSeason> localizedSeasons = Arrays.stream(perfume.getPerfumeSeasons().split(","))
                 .map(String::trim)
                 .map(PerfumeSeason::valueOf)
-                .map(enumLocalizationService::getLocalizedName)
-                .collect(Collectors.joining(", "));
+                .collect(Collectors.toList());
 
         return PerfumeDetailDTO.builder()
                 .id(perfume.getId())
                 .name(item.getName())
                 .brand(item.getBrand())
                 .active(item.getActive())
-                .translatedName(translation != null ? translation.getName() : item.getName())
-                .description(translation != null ? translation.getDescription() : null)
-                .perfumeType(enumLocalizationService.getLocalizedName(perfume.getPerfumeType()))
+                .translatedName(namesByLocale)
+                .description(descriptionsByLocale)
+                .perfumeType(perfume.getPerfumeType())
                 .perfumeSeason(localizedSeasons)
+                .primaryImageUrl(primaryImageUrl)
                 .imageUrls(imageUrls)
                 .availableSizes(availableSizes)
                 .build();
@@ -141,10 +149,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
 
         List<PerfumeImage> primaryImages = perfumeImageRepo.findPrimaryImagesByPerfumeIds(perfumeIds);
         List<ItemPrice> allPrices = itemPriceRepo.findCurrentActivePricesByItemIds(itemIds);
-        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIdsAndLocale(
-                itemIds,
-                LocaleContextHolder.getLocale().getLanguage()
-        );
+        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIds(itemIds);
 
         Map<Long, PerfumeImage> primaryImageByPerfume = primaryImages.stream()
                 .collect(Collectors.toMap(
@@ -158,10 +163,13 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                         p -> p
                 ));
 
-        Map<Long, ItemTranslation> translationsByItem = allTranslations.stream()
-                .collect(Collectors.toMap(
+        Map<Long, Map<String, String>> translationsByItem = allTranslations.stream()
+                .collect(Collectors.groupingBy(
                         itemTranslation -> itemTranslation.getItem().getId(),
-                        t -> t
+                        Collectors.toMap(
+                                ItemTranslation::getLocale,
+                                ItemTranslation::getName
+                        )
                 ));
 
         List<PerfumeCardDTO> perfumeCards = perfumes.stream()
@@ -188,7 +196,7 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
             Perfume perfume,
             PerfumeImage primaryImage,
             ItemPrice lowestPrice,
-            ItemTranslation translation
+            Map<String, String> translations
     ) {
         Item item = perfume.getItem();
 
@@ -202,8 +210,8 @@ public class PublicPerfumeServiceImpl implements PublicPerfumeService {
                 .brand(item.getBrand())
                 .active(item.getActive())
                 .lowestPrice(lowestPrice.getPrice())
-                .translatedName(translation != null ? translation.getName() : item.getName())
-                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                .translatedName(translations)
+                .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId() + "?v=" + primaryImage.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
                 .build();
     }
 

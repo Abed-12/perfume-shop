@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.coupon.dto.response;
 
+import com.abed.perfumeshop.common.enums.DiscountType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,11 +17,9 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CouponResponse {
 
-    private Long id;
-
     private String code;
 
-    private String discountType;
+    private DiscountType discountType;
 
     private BigDecimal discountValue;
 

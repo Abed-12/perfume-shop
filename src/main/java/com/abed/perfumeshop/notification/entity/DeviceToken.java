@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-@Table(name = "device_tokens")
+@Table(name = "device_tokens",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_user_device",
+                columnNames = {"user_id", "user_type", "device_name"}
+        ))
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceToken {

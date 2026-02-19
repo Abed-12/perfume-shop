@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.customer.dto.response;
 
+import com.abed.perfumeshop.common.enums.Governorate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,6 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CustomerDTO {
 
-    private Long id;
-
     private String firstName;
     private String lastName;
     private String email;
@@ -25,7 +24,7 @@ public class CustomerDTO {
     private String phoneNumber;
     private String alternativePhoneNumber;
 
-    private String governorate;
+    private Governorate governorate;
     private String address;
 
     @JsonIgnore

@@ -38,7 +38,6 @@ public class AdminProfileServiceImpl implements AdminProfileService {
         Admin admin = adminHelper.getCurrentLoggedInUser();
 
         return AdminDTO.builder()
-                .id(admin.getId())
                 .firstName(admin.getFirstName())
                 .lastName(admin.getLastName())
                 .email(admin.getEmail())

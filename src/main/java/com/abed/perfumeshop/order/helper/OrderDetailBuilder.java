@@ -18,11 +18,11 @@ import com.abed.perfumeshop.order.entity.Order;
 import com.abed.perfumeshop.order.entity.OrderItem;
 import com.abed.perfumeshop.order.repo.OrderItemRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderDetailBuilder {
 
-    private static final String BASE_IMAGE_URL = "/api/public/perfumes";
+    private static final String BASE_IMAGE_URL = "/public/perfumes";
 
     private final OrderItemRepo orderItemRepo;
     private final ItemTranslationRepo itemTranslationRepo;
@@ -54,14 +54,14 @@ public class OrderDetailBuilder {
                 .toList();
 
         // Fetch translations
-        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIdsAndLocale(
-                itemIds,
-                LocaleContextHolder.getLocale().getLanguage()
-        );
-        Map<Long, ItemTranslation> translationsByItem = allTranslations.stream()
-                .collect(Collectors.toMap(
+        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIds(itemIds);
+        Map<Long, Map<String, String>> translationsByItem = allTranslations.stream()
+                .collect(Collectors.groupingBy(
                         itemTranslation -> itemTranslation.getItem().getId(),
-                        t -> t
+                        Collectors.toMap(
+                                ItemTranslation::getLocale,
+                                ItemTranslation::getName
+                        )
                 ));
 
         // Fetch perfumes
@@ -92,7 +92,7 @@ public class OrderDetailBuilder {
 
         for (OrderItem orderItem : orderItems) {
             Item item = orderItem.getItem();
-            ItemTranslation itemTranslation = translationsByItem.get(item.getId());
+            Map<String, String> itemTranslations = translationsByItem.get(item.getId());
             Perfume perfume = perfumesByItem.get(item.getId());
             PerfumeImage primaryImage = imagesByPerfume.get(perfume.getId());
 
@@ -105,13 +105,13 @@ public class OrderDetailBuilder {
             CustomerOrderDetailDTO.OrderItemInfo orderItemInfo = CustomerOrderDetailDTO.OrderItemInfo.builder()
                     .itemId(item.getId())
                     .name(item.getName())
-                    .translatedName(itemTranslation.getName())
+                    .translatedName(itemTranslations)
                     .brand(item.getBrand())
                     .quantity(orderItem.getQuantity())
-                    .size(enumLocalizationService.getLocalizedName(orderItem.getPerfumeSize()))
+                    .size(orderItem.getPerfumeSize())
                     .unitPrice(orderItem.getUnitPrice())
                     .subtotal(itemSubtotal)
-                    .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                    .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId() + "?v=" + primaryImage.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
                     .build();
 
             orderItemInfos.add(orderItemInfo);
@@ -128,7 +128,7 @@ public class OrderDetailBuilder {
         CustomerOrderDetailDTO.ShippingInfo shippingInfo = CustomerOrderDetailDTO.ShippingInfo.builder()
                 .phoneNumber(customerOrder.getPhoneNumber())
                 .alternativePhoneNumber(customerOrder.getAlternativePhoneNumber())
-                .governorate(enumLocalizationService.getLocalizedName(customerOrder.getGovernorate()))
+                .governorate(customerOrder.getGovernorate())
                 .address(customerOrder.getAddress())
                 .build();
 
@@ -139,7 +139,7 @@ public class OrderDetailBuilder {
         if (coupon != null) {
             couponInfo = CustomerOrderDetailDTO.CouponInfo.builder()
                     .code(coupon.getCode())
-                    .discountType(enumLocalizationService.getLocalizedName(coupon.getDiscountType()))
+                    .discountType(coupon.getDiscountType())
                     .discountValue(coupon.getDiscountValue())
                     .build();
 
@@ -183,14 +183,14 @@ public class OrderDetailBuilder {
                 .toList();
 
         // Fetch translations
-        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIdsAndLocale(
-                itemIds,
-                LocaleContextHolder.getLocale().getLanguage()
-        );
-        Map<Long, ItemTranslation> translationsByItem = allTranslations.stream()
-                .collect(Collectors.toMap(
+        List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIds(itemIds);
+        Map<Long, Map<String, String>> translationsByItem = allTranslations.stream()
+                .collect(Collectors.groupingBy(
                         itemTranslation -> itemTranslation.getItem().getId(),
-                        t -> t
+                        Collectors.toMap(
+                                ItemTranslation::getLocale,
+                                ItemTranslation::getName
+                        )
                 ));
 
         // Fetch perfumes
@@ -221,7 +221,7 @@ public class OrderDetailBuilder {
 
         for (OrderItem orderItem : orderItems) {
             Item item = orderItem.getItem();
-            ItemTranslation itemTranslation = translationsByItem.get(item.getId());
+            Map<String, String> itemTranslations = translationsByItem.get(item.getId());
             Perfume perfume = perfumesByItem.get(item.getId());
             PerfumeImage primaryImage = imagesByPerfume.get(perfume.getId());
 
@@ -234,13 +234,13 @@ public class OrderDetailBuilder {
             GuestOrderDetailDTO.OrderItemInfo orderItemInfo = GuestOrderDetailDTO.OrderItemInfo.builder()
                     .itemId(item.getId())
                     .name(item.getName())
-                    .translatedName(itemTranslation.getName())
+                    .translatedName(itemTranslations)
                     .brand(item.getBrand())
                     .quantity(orderItem.getQuantity())
-                    .size(enumLocalizationService.getLocalizedName(orderItem.getPerfumeSize()))
+                    .size(orderItem.getPerfumeSize())
                     .unitPrice(orderItem.getUnitPrice())
                     .subtotal(itemSubtotal)
-                    .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId())
+                    .primaryImageUrl(BASE_IMAGE_URL + "/" + perfume.getId() + "/images/" + primaryImage.getId() + "?v=" + primaryImage.getUpdatedAt().toInstant(ZoneOffset.UTC).toEpochMilli())
                     .build();
 
             orderItemInfos.add(orderItemInfo);
@@ -256,7 +256,7 @@ public class OrderDetailBuilder {
         GuestOrderDetailDTO.ShippingInfo shippingInfo = GuestOrderDetailDTO.ShippingInfo.builder()
                 .phoneNumber(guestOrder.getPhoneNumber())
                 .alternativePhoneNumber(guestOrder.getAlternativePhoneNumber())
-                .governorate(enumLocalizationService.getLocalizedName(guestOrder.getGovernorate()))
+                .governorate(guestOrder.getGovernorate())
                 .address(guestOrder.getAddress())
                 .build();
 

@@ -5,7 +5,6 @@ import com.abed.perfumeshop.common.dto.request.UpdatePasswordRequest;
 import com.abed.perfumeshop.common.enums.NotificationType;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.BadRequestException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
 import com.abed.perfumeshop.customer.dto.request.CustomerUpdateRequest;
 import com.abed.perfumeshop.customer.entity.Customer;
@@ -31,7 +30,6 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
     private final CustomerHelper customerHelper;
     private final AdminRepo adminRepo;
     private final NotificationSenderFacade notificationSenderFacade;
-    private final EnumLocalizationService enumLocalizationService;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
 
@@ -40,13 +38,12 @@ public class CustomerProfileServiceImpl implements CustomerProfileService {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
         return CustomerDTO.builder()
-                .id(customer.getId())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
                 .email(customer.getEmail())
                 .phoneNumber(customer.getPhoneNumber())
                 .alternativePhoneNumber(customer.getAlternativePhoneNumber())
-                .governorate(enumLocalizationService.getLocalizedName(customer.getGovernorate()))
+                .governorate(customer.getGovernorate())
                 .address(customer.getAddress())
                 .build();
     }

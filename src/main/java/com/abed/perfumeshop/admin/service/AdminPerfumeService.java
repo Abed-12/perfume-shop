@@ -18,11 +18,11 @@ public interface AdminPerfumeService {
 
     void createPerfume(CreatePerfumeRequest createPerfumeRequest, List<MultipartFile> images);
 
-    void updatePerfume(Long id, UpdatePerfumeRequest updatePerfumeRequest);
+    void updatePerfume(Long perfumeId, UpdatePerfumeRequest updatePerfumeRequest);
 
     void addPerfumeImage(Long perfumeId, MultipartFile image, Boolean isPrimary);
 
-    void updatePerfumeImage(Long perfumeId, Long imageId, MultipartFile image);
+    void updatePerfumeImage(Long perfumeId, Long imageId, MultipartFile image, Boolean isPrimary);
 
     void deletePerfumeImage(Long perfumeId, Long imageId);
 

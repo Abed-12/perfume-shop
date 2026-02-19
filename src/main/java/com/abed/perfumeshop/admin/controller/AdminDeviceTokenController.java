@@ -30,7 +30,7 @@ public class AdminDeviceTokenController {
     }
 
     @GetMapping
-    public ResponseEntity<Response<List<DeviceTokenResponseDTO>>> getMyDevices() {
+    public ResponseEntity<Response<List<DeviceTokenResponseDTO>>> getUserDevices() {
         List<DeviceTokenResponseDTO> devices = adminDeviceTokenService.getUserDevices();
 
         return ResponseEntity.ok(Response.<List<DeviceTokenResponseDTO>>builder()

@@ -11,7 +11,7 @@ public interface PublicPerfumeService {
 
     PageResponse<PerfumeCardDTO> getActivePerfumes(int page, int size, PerfumeType perfumeType, PerfumeSeason perfumeSeason);
 
-    PerfumeDetailDTO getPerfumeById(Long id);
+    PerfumeDetailDTO getPerfumeById(Long perfumeId);
 
     PageResponse<PerfumeCardDTO> searchPerfumes(int page, int size, String keyword);
 

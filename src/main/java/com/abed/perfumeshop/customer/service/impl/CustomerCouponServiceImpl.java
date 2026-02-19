@@ -2,7 +2,6 @@ package com.abed.perfumeshop.customer.service.impl;
 
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.coupon.dto.request.CouponValidationRequest;
 import com.abed.perfumeshop.coupon.dto.response.CouponValidationResponse;
 import com.abed.perfumeshop.coupon.entity.Coupon;
@@ -25,7 +24,6 @@ public class CustomerCouponServiceImpl implements CustomerCouponService {
     private final CouponRepo couponRepo;
     private final CouponUsageRepo couponUsageRepo;
     private final CustomerHelper customerHelper;
-    private final EnumLocalizationService enumLocalizationService;
 
     @Override
     public CouponValidationResponse validateCoupon(CouponValidationRequest couponValidationRequest) {
@@ -65,7 +63,7 @@ public class CustomerCouponServiceImpl implements CustomerCouponService {
         // Build response
         return CouponValidationResponse.builder()
                 .couponCode(coupon.getCode())
-                .discountType(enumLocalizationService.getLocalizedName(coupon.getDiscountType()))
+                .discountType(coupon.getDiscountType())
                 .discountValue(coupon.getDiscountValue())
                 .originalPrice(couponValidationRequest.getOrderTotal())
                 .discountAmount(discountAmount)

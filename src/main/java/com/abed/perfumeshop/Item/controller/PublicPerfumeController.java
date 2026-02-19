@@ -27,7 +27,7 @@ public class PublicPerfumeController {
     @GetMapping
     public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> getActivePerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) PerfumeType perfumeType,
             @RequestParam(required = false) PerfumeSeason perfumeSeason
     ){
@@ -42,9 +42,9 @@ public class PublicPerfumeController {
         );
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Response<PerfumeDetailDTO>> getPerfumeById(@PathVariable Long id){
-        PerfumeDetailDTO perfumeDetail = publicPerfumeService.getPerfumeById(id);
+    @GetMapping("/{perfumeId}")
+    public ResponseEntity<Response<PerfumeDetailDTO>> getPerfumeById(@PathVariable Long perfumeId){
+        PerfumeDetailDTO perfumeDetail = publicPerfumeService.getPerfumeById(perfumeId);
 
         return ResponseEntity.ok(
                 Response.<PerfumeDetailDTO>builder()
@@ -58,7 +58,7 @@ public class PublicPerfumeController {
     @GetMapping("/search")
     public ResponseEntity<Response<PageResponse<PerfumeCardDTO>>> searchPerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam String keyword
     ){
         PageResponse<PerfumeCardDTO> pageResponse = publicPerfumeService.searchPerfumes(page, size, keyword);

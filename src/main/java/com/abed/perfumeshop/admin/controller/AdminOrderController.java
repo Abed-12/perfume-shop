@@ -24,7 +24,7 @@ public class AdminOrderController {
     @GetMapping("/customer")
     public ResponseEntity<Response<PageResponse<AdminOrderSummaryDTO>>> getCustomerOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) OrderStatus status
     ) {
         PageResponse<AdminOrderSummaryDTO> pageResponse = adminOrderService.getCustomerOrders(page, size, status);
@@ -41,7 +41,7 @@ public class AdminOrderController {
     @GetMapping("/guest")
     public ResponseEntity<Response<PageResponse<AdminOrderSummaryDTO>>> getGuestOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) OrderStatus status
     ) {
         PageResponse<AdminOrderSummaryDTO> pageResponse = adminOrderService.getGuestOrders(page, size, status);

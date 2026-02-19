@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdminDTO {
 
-    private Long id;
-
     private String firstName;
     private String lastName;
     private String email;

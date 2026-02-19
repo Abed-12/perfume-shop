@@ -1,5 +1,6 @@
 package com.abed.perfumeshop.coupon.dto.response;
 
+import com.abed.perfumeshop.common.enums.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ public class CouponValidationResponse {
 
     private String couponCode;
 
-    private String discountType;
+    private DiscountType discountType;
 
     private BigDecimal discountValue;
 

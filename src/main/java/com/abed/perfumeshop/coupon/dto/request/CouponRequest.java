@@ -18,8 +18,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CouponRequest {
 
-    private Long id;
-
     @NotNull(message = "{coupon.discountType.required}")
     @JsonProperty(required = true)
     private DiscountType discountType;

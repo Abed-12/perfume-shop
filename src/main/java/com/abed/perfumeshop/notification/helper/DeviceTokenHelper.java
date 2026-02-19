@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -21,20 +22,32 @@ public class DeviceTokenHelper {
 
     @Transactional
     public void registerToken(DeviceTokenDTO deviceTokenDTO, Long userId, UserType userType) {
-        // Skip if token already registered
-        if (deviceTokenRepo.findByToken(deviceTokenDTO.getToken()).isPresent()) {
-            return;
+        String newToken = deviceTokenDTO.getToken();
+        String deviceName = deviceTokenDTO.getDeviceName();
+
+        // Check if this user+device combination already exists
+        Optional<DeviceToken> existingByUserDevice = deviceTokenRepo
+                .findByUserIdAndUserTypeAndDeviceName(userId, userType, deviceName);
+
+        if (existingByUserDevice.isPresent()){
+            // Update token if it changed
+            DeviceToken deviceToken = existingByUserDevice.get();
+            if (!deviceToken.getToken().equals(newToken)){
+                deviceToken.setToken(newToken);
+                deviceTokenRepo.save(deviceToken);
+            }
+        } else {
+            // Register new device token
+            DeviceToken deviceToken = DeviceToken.builder()
+                    .token(deviceTokenDTO.getToken())
+                    .userType(userType)
+                    .userId(userId)
+                    .deviceType(deviceTokenDTO.getDeviceType())
+                    .deviceName(deviceTokenDTO.getDeviceName())
+                    .build();
+
+            deviceTokenRepo.save(deviceToken);
         }
-
-        DeviceToken deviceToken = DeviceToken.builder()
-                .token(deviceTokenDTO.getToken())
-                .userType(userType)
-                .userId(userId)
-                .deviceType(deviceTokenDTO.getDeviceType())
-                .deviceName(deviceTokenDTO.getDeviceName())
-                .build();
-
-        deviceTokenRepo.save(deviceToken);
     }
 
     public List<DeviceTokenResponseDTO> getUserDevices(Long userId, UserType userType) {

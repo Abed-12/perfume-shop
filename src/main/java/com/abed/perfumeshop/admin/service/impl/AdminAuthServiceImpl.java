@@ -41,7 +41,7 @@ public class AdminAuthServiceImpl implements AdminAuthService {
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
 
-    @Value("${password.reset.link}")
+    @Value("${admin.password.reset.link}")
     private String resetLink;
 
     @Override

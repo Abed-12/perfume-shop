@@ -38,7 +38,7 @@ public class AdminUserNotificationController {
                 .build());
     }
 
-    @PutMapping("/seen-all")
+    @PatchMapping("/seen-all")
     public ResponseEntity<Response<Void>> markAllAsSeen() {
         adminNotificationService.markAllAsSeen();
 

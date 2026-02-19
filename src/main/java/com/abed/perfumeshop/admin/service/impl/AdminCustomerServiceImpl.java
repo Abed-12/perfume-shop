@@ -3,7 +3,6 @@ package com.abed.perfumeshop.admin.service.impl;
 import com.abed.perfumeshop.admin.service.AdminCustomerService;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.common.dto.response.PageResponse;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.dto.response.CustomerDTO;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
@@ -18,7 +17,6 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
 
     private final AdminHelper adminHelper;
     private final CustomerRepo customerRepo;
-    private final EnumLocalizationService enumLocalizationService;
 
     @Override
     public PageResponse<CustomerDTO> getCustomers(int page, int size, String email) {
@@ -41,15 +39,12 @@ public class AdminCustomerServiceImpl implements AdminCustomerService {
     // ========== Private Helper Methods ==========
     private CustomerDTO mapToDTO(Customer customer) {
         return CustomerDTO.builder()
-                .id(customer.getId())
                 .firstName(customer.getFirstName())
                 .lastName(customer.getLastName())
                 .email(customer.getEmail())
                 .phoneNumber(customer.getPhoneNumber())
                 .alternativePhoneNumber(customer.getAlternativePhoneNumber())
-                .governorate(
-                        enumLocalizationService.getLocalizedName(customer.getGovernorate())
-                )
+                .governorate(customer.getGovernorate())
                 .address(customer.getAddress())
                 .build();
     }

@@ -1,11 +1,15 @@
 package com.abed.perfumeshop.order.dto.response;
 
+import com.abed.perfumeshop.common.enums.DiscountType;
+import com.abed.perfumeshop.common.enums.Governorate;
+import com.abed.perfumeshop.common.enums.PerfumeSize;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -43,7 +47,7 @@ public class CustomerOrderDetailDTO {
     public static class ShippingInfo {
         private String phoneNumber;
         private String alternativePhoneNumber;
-        private String governorate;
+        private Governorate governorate;
         private String address;
     }
 
@@ -51,7 +55,7 @@ public class CustomerOrderDetailDTO {
     @Builder
     public static class CouponInfo {
         private String code;
-        private String discountType;
+        private DiscountType discountType;
         private BigDecimal discountValue;
     }
 
@@ -60,10 +64,10 @@ public class CustomerOrderDetailDTO {
     public static class OrderItemInfo {
         private Long itemId;
         private String name;
-        private String translatedName;
+        private Map<String, String> translatedName;
         private String brand;
         private Integer quantity;
-        private String size;
+        private PerfumeSize size;
         private BigDecimal unitPrice;
         private BigDecimal subtotal;
         private String primaryImageUrl;

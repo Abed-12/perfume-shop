@@ -27,7 +27,7 @@ public class AdminPerfumeController {
     @GetMapping
     public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> getAllPerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) PerfumeType perfumeType,
             @RequestParam(required = false) PerfumeSeason perfumeSeason
     ) {
@@ -45,7 +45,7 @@ public class AdminPerfumeController {
     @GetMapping("/search")
     public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> searchPerfumes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam String keyword
     ){
         PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.searchPerfumes(page, size, keyword);
@@ -75,12 +75,12 @@ public class AdminPerfumeController {
                 );
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{perfumeId}")
     public ResponseEntity<Response<Void>> updatePerfume(
-            @PathVariable Long id,
+            @PathVariable Long perfumeId,
             @RequestBody @Valid UpdatePerfumeRequest updatePerfumeRequest
     ) {
-        adminPerfumeService.updatePerfume(id, updatePerfumeRequest);
+        adminPerfumeService.updatePerfume(perfumeId, updatePerfumeRequest);
 
         return ResponseEntity.ok(
                 Response.<Void>builder()
@@ -110,9 +110,10 @@ public class AdminPerfumeController {
     public ResponseEntity<Response<Void>> updatePerfumeImage(
             @PathVariable Long perfumeId,
             @PathVariable Long imageId,
-            @RequestPart MultipartFile image
+            @RequestPart MultipartFile image,
+            @RequestParam(defaultValue = "false") Boolean isPrimary
     ){
-        adminPerfumeService.updatePerfumeImage(perfumeId, imageId, image);
+        adminPerfumeService.updatePerfumeImage(perfumeId, imageId, image, isPrimary);
 
         return ResponseEntity.ok(
                 Response.<Void>builder()

@@ -4,7 +4,6 @@ import com.abed.perfumeshop.admin.entity.Admin;
 import com.abed.perfumeshop.admin.helper.AdminHelper;
 import com.abed.perfumeshop.common.exception.AlreadyExistsException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.notification.service.CouponNotificationService;
 import com.abed.perfumeshop.common.service.CodeGenerator;
 import com.abed.perfumeshop.coupon.dto.request.CouponRequest;
@@ -24,7 +23,6 @@ public class AdminCouponServiceImpl implements AdminCouponService {
     private final AdminHelper adminHelper;
     private final CouponNotificationService couponNotificationService;
     private final CodeGenerator codeGenerator;
-    private final EnumLocalizationService enumLocalizationService;
 
     @Override
     public void createCoupon(CouponRequest couponRequest) {
@@ -59,9 +57,8 @@ public class AdminCouponServiceImpl implements AdminCouponService {
                 .orElseThrow(() -> new NotFoundException("coupon.not.found.active"));
 
         return CouponResponse.builder()
-                .id(coupon.getId())
                 .code(coupon.getCode())
-                .discountType(enumLocalizationService.getLocalizedName(coupon.getDiscountType()))
+                .discountType(coupon.getDiscountType())
                 .discountValue(coupon.getDiscountValue())
                 .expiryDate(coupon.getExpiryDate())
                 .active(coupon.getActive())

@@ -22,7 +22,7 @@ public class AdminCustomerController {
     @GetMapping
     public ResponseEntity<Response<PageResponse<CustomerDTO>>> getCustomers(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String email
     ){
         PageResponse<CustomerDTO> pageResponse = adminCustomerService.getCustomers(page, size, email);

@@ -15,7 +15,7 @@ public interface ItemTranslationRepo extends JpaRepository<ItemTranslation, Long
     Optional<ItemTranslation> findByItemIdAndLocale(Long itemId, String locale);
 
     @Query("SELECT it FROM ItemTranslation it " +
-            "WHERE it.item.id IN :itemIds AND it.locale = :locale")
-    List<ItemTranslation> findByItemIdsAndLocale(@Param("itemIds") List<Long> itemIds, @Param("locale") String locale);
+            "WHERE it.item.id IN :itemIds")
+    List<ItemTranslation> findByItemIds(@Param("itemIds") List<Long> itemIds);
 
 }
