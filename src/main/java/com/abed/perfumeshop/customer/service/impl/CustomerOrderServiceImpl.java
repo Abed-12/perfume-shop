@@ -134,7 +134,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
                 .customer(customer)
                 .coupon(coupon)
                 .build();
-        CustomerOrder saved = customerOrderRepo.save(customerOrder);
+        customerOrderRepo.save(customerOrder);
 
         // Record coupon usage after successful order
         if (coupon != null) {

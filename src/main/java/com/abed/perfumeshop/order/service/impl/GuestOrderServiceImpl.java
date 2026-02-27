@@ -84,7 +84,6 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         // Set final total price (auto-saved by Hibernate at transaction commit)
         order.setTotalPrice(subtotal.add(shippingFee));
 
-
         // Check if customer exists with same email (auto-linking)
         Optional<Customer> existingCustomer = customerRepo.findByEmail(createGuestOrderRequest.getEmail());
 
