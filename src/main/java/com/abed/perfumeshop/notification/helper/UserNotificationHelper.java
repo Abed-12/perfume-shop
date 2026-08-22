@@ -6,6 +6,10 @@ import com.abed.perfumeshop.notification.dto.response.UserNotificationDTO;
 import com.abed.perfumeshop.notification.entity.Notification;
 import com.abed.perfumeshop.notification.entity.UserNotification;
 import com.abed.perfumeshop.notification.repo.UserNotificationRepo;
+import com.abed.perfumeshop.order.entity.CustomerOrder;
+import com.abed.perfumeshop.order.entity.GuestOrder;
+import com.abed.perfumeshop.order.repo.CustomerOrderRepo;
+import com.abed.perfumeshop.order.repo.GuestOrderRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -20,6 +25,8 @@ import java.util.stream.Collectors;
 public class UserNotificationHelper {
 
     private final UserNotificationRepo userNotificationRepo;
+    private final CustomerOrderRepo customerOrderRepo;
+    private final GuestOrderRepo guestOrderRepo;
 
     public List<UserNotificationDTO> getUserNotifications(Long userId, UserType userType) {
         List<UserNotification> notifications = userNotificationRepo
@@ -57,7 +64,8 @@ public class UserNotificationHelper {
     private UserNotificationDTO mapToDTO(UserNotification userNotification) {
         Notification notification = userNotification.getNotification();
         String orderNumber = notification.getOrder().getOrderNumber();
-        String userType = orderNumber.substring(0, 3);
+        String isCustomerOrder = orderNumber.substring(0, 3);
+        String email = resolveEmail(orderNumber, isCustomerOrder);
 
         return UserNotificationDTO.builder()
                 .id(userNotification.getId())
@@ -68,10 +76,20 @@ public class UserNotificationHelper {
                 .seenAt(userNotification.getSeenAt())
                 .data(Map.of(
                         "orderNumber", orderNumber,
-                        "email", notification.getRecipient()
+                        "email", email != null ? email : ""
                 ))
-                .userType(userType.equals("CUS") ? "CUSTOMER" : "GUEST")
+                .userType(isCustomerOrder.equals("CUS") ? "CUSTOMER" : "GUEST")
                 .build();
+    }
+
+    private String resolveEmail(String orderNumber, String prefix) {
+        if (prefix.equals("CUS")) {
+            Optional<CustomerOrder> customerOrder = customerOrderRepo.findByOrder_OrderNumber(orderNumber);
+            return customerOrder.map(co -> co.getCustomer().getEmail()).orElse(null);
+        } else {
+            Optional<GuestOrder> guestOrder = guestOrderRepo.findByOrder_OrderNumber(orderNumber);
+            return guestOrder.map(GuestOrder::getEmail).orElse(null);
+        }
     }
 
 }

@@ -9,6 +9,7 @@ import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.repo.CustomerRepo;
+import com.abed.perfumeshop.delivery.service.DeliveryFeeService;
 import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.dto.response.PushNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
@@ -45,6 +46,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
     private final GuestOrderRepo guestOrderRepo;
     private final OrderRepo orderRepo;
     private final CustomerRepo customerRepo;
+    private final DeliveryFeeService deliveryFeeService;
     private final OrderProcessingHelper orderProcessingHelper;
     private final OrderNumberGenerator orderNumberGenerator;
     private final OrderDetailBuilder orderDetailBuilder;
@@ -52,8 +54,8 @@ public class GuestOrderServiceImpl implements GuestOrderService {
     private final NotificationSenderFacade notificationSenderFacade;
     private final MessageSource messageSource;
 
-    @Value("${order.tracking.link}")
-    private String orderTrackingLink;
+    @Value("${order.tracking.link.guest}")
+    private String guestTrackingLink;
 
     @Value("${notification.image.new-order}")
     private String newOrderImageUrl;
@@ -65,7 +67,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
     @Transactional
     public OrderResponseDTO createGuestOrder(CreateGuestOrderRequest createGuestOrderRequest) {
         // Calculate shipping fee
-        BigDecimal shippingFee = createGuestOrderRequest.getGovernorate().getShippingFee();
+        BigDecimal shippingFee = deliveryFeeService.getShippingFee(createGuestOrderRequest.getGovernorate());
 
         // Generate unique order number
         String orderNumber = orderNumberGenerator.generate(GUEST_ORDER_PREFIX);
@@ -128,7 +130,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         templateVariables.put("totalPrice", String.format("%.2f", order.getTotalPrice()));
         templateVariables.put("orderDate", order.getOrderDate());
         templateVariables.put("trackingLink",
-                orderTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
+                guestTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
 
         EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(createGuestOrderRequest.getEmail())
@@ -219,7 +221,7 @@ public class GuestOrderServiceImpl implements GuestOrderService {
         templateVariables.put("cancellationReason", order.getCancellationReason());
         templateVariables.put("deliveredAt", null);
         templateVariables.put("trackingLink",
-                orderTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
+                guestTrackingLink + order.getOrderNumber() + "&email=" + guestOrder.getEmail());
 
         EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(guestOrder.getEmail())

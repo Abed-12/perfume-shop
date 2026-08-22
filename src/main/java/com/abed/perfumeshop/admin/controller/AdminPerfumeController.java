@@ -29,9 +29,10 @@ public class AdminPerfumeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) PerfumeType perfumeType,
-            @RequestParam(required = false) PerfumeSeason perfumeSeason
+            @RequestParam(required = false) PerfumeSeason perfumeSeason,
+            @RequestParam(required = false) Boolean active
     ) {
-        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.getAllPerfumes(page, size, perfumeType, perfumeSeason);
+        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.getAllPerfumes(page, size, perfumeType, perfumeSeason, active);
 
         return ResponseEntity.ok(
                 Response.<PageResponse<AdminPerfumeCardDTO>>builder()
@@ -46,9 +47,10 @@ public class AdminPerfumeController {
     public ResponseEntity<Response<PageResponse<AdminPerfumeCardDTO>>> searchPerfumes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam String keyword
+            @RequestParam String keyword,
+            @RequestParam(required = false) Boolean active
     ){
-        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.searchPerfumes(page, size, keyword);
+        PageResponse<AdminPerfumeCardDTO> pageResponse = adminPerfumeService.searchPerfumes(page, size, keyword, active);
 
         return ResponseEntity.ok(
                 Response.<PageResponse<AdminPerfumeCardDTO>>builder()

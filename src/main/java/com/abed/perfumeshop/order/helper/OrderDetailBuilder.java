@@ -7,7 +7,6 @@ import com.abed.perfumeshop.Item.entity.PerfumeImage;
 import com.abed.perfumeshop.Item.repo.ItemTranslationRepo;
 import com.abed.perfumeshop.Item.repo.PerfumeImageRepo;
 import com.abed.perfumeshop.Item.repo.PerfumeRepo;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
@@ -38,7 +37,6 @@ public class OrderDetailBuilder {
     private final ItemTranslationRepo itemTranslationRepo;
     private final PerfumeRepo perfumeRepo;
     private final PerfumeImageRepo perfumeImageRepo;
-    private final EnumLocalizationService enumLocalizationService;
 
     public CustomerOrderDetailDTO buildCustomerOrderDetail(CustomerOrder customerOrder) {
         Order order = customerOrder.getOrder();
@@ -157,7 +155,7 @@ public class OrderDetailBuilder {
         // Build final response
         return CustomerOrderDetailDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .notes(order.getNotes())
                 .orderDate(order.getOrderDate())
                 .deliveredAt(order.getDeliveredAt())
@@ -270,7 +268,7 @@ public class OrderDetailBuilder {
         // Build final response
         return GuestOrderDetailDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .notes(order.getNotes())
                 .orderDate(order.getOrderDate())
                 .deliveredAt(order.getDeliveredAt())

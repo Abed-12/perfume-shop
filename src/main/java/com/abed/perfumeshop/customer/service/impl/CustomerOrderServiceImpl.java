@@ -4,7 +4,6 @@ import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.*;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.coupon.entity.Coupon;
 import com.abed.perfumeshop.coupon.entity.CouponUsage;
 import com.abed.perfumeshop.coupon.repo.CouponRepo;
@@ -12,6 +11,7 @@ import com.abed.perfumeshop.coupon.repo.CouponUsageRepo;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.customer.helper.CustomerHelper;
 import com.abed.perfumeshop.customer.service.CustomerOrderService;
+import com.abed.perfumeshop.delivery.service.DeliveryFeeService;
 import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.dto.response.PushNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
@@ -60,6 +60,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     private final CouponRepo couponRepo;
     private final CouponUsageRepo couponUsageRepo;
     private final GuestOrderRepo guestOrderRepo;
+    private final DeliveryFeeService deliveryFeeService;
     private final CustomerHelper customerHelper;
     private final OrderProcessingHelper orderProcessingHelper;
     private final OrderNumberGenerator orderNumberGenerator;
@@ -67,10 +68,9 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     private final OrderInventoryHelper orderInventoryHelper;
     private final NotificationSenderFacade notificationSenderFacade;
     private final MessageSource messageSource;
-    private final EnumLocalizationService enumLocalizationService;
 
-    @Value("${order.tracking.link}")
-    private String orderTrackingLink;
+    @Value("${order.tracking.link.customer}")
+    private String customerTrackingLink;
 
     @Value("${notification.image.new-order}")
     private String newOrderImageUrl;
@@ -95,7 +95,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         }
 
         // Calculate shipping fee
-        BigDecimal shippingFee = createCustomerOrderRequest.getGovernorate().getShippingFee();
+        BigDecimal shippingFee = deliveryFeeService.getShippingFee(createCustomerOrderRequest.getGovernorate());
 
         // Generate order number
         String orderNumber = orderNumberGenerator.generate(CUSTOMER_ORDER_PREFIX);
@@ -167,7 +167,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         templateVariables.put("orderNumber", order.getOrderNumber());
         templateVariables.put("totalPrice", String.format("%.2f", order.getTotalPrice()));
         templateVariables.put("orderDate", order.getOrderDate());
-        templateVariables.put("trackingLink", orderTrackingLink + order.getOrderNumber());
+        templateVariables.put("trackingLink", customerTrackingLink + order.getOrderNumber());
 
         if (coupon != null) {
             templateVariables.put("couponApplied", true);
@@ -191,14 +191,21 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     }
 
     @Override
-    public PageResponse<OrderSummaryDTO> getOrders(int page, int size, OrderStatus status) {
+    public PageResponse<OrderSummaryDTO> getOrders(int page, int size, OrderStatus status, OrderType orderType) {
         Customer customer = customerHelper.getCurrentLoggedInUser();
 
-        // Fetch and combine customer and guest orders
-        List<Order> allOrders = Stream.concat(
-                customerOrderRepo.findByCustomerAndStatusOrAll(customer, status).stream(),
-                guestOrderRepo.findByClaimedCustomerAndStatusOrAll(customer, status).stream()
-        ).toList();
+        // Fetch and combine customer and guest orders based on orderType filter
+        List<Order> allOrders;
+        if (orderType == OrderType.CUSTOMER) {
+            allOrders = customerOrderRepo.findByCustomerAndStatusOrAll(customer, status);
+        } else if (orderType == OrderType.GUEST) {
+            allOrders = guestOrderRepo.findByClaimedCustomerAndStatusOrAll(customer, status);
+        } else {
+            allOrders = Stream.concat(
+                    customerOrderRepo.findByCustomerAndStatusOrAll(customer, status).stream(),
+                    guestOrderRepo.findByClaimedCustomerAndStatusOrAll(customer, status).stream()
+            ).toList();
+        }
 
         if (allOrders.isEmpty()) {
             return PageResponse.<OrderSummaryDTO>builder()
@@ -337,7 +344,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         templateVariables.put("cancelledAt", order.getCancelledAt());
         templateVariables.put("cancellationReason", order.getCancellationReason());
         templateVariables.put("deliveredAt", null);
-        templateVariables.put("trackingLink", orderTrackingLink + order.getOrderNumber());
+        templateVariables.put("trackingLink", customerTrackingLink + order.getOrderNumber());
 
         EmailNotificationDTO emailNotificationDTO = EmailNotificationDTO.builder()
                 .recipient(customer.getEmail())
@@ -358,10 +365,10 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
 
         return OrderSummaryDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .orderType(enumLocalizationService.getLocalizedName(OrderType.CUSTOMER))
+                .orderType(OrderType.CUSTOMER.name())
                 .customerName(customer.getFirstName() + " " + customer.getLastName())
                 .orderDate(order.getOrderDate())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .totalPrice(order.getTotalPrice())
                 .itemCount(itemCount)
                 .guestEmail(null)
@@ -373,10 +380,10 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
 
         return OrderSummaryDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .orderType(enumLocalizationService.getLocalizedName(OrderType.GUEST))
+                .orderType(OrderType.GUEST.name())
                 .customerName(guestOrder.getUsername())
                 .orderDate(order.getOrderDate())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .totalPrice(order.getTotalPrice())
                 .itemCount(itemCount)
                 .guestEmail(guestOrder.getEmail())

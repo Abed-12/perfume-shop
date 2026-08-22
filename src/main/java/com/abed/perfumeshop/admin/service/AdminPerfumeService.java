@@ -12,9 +12,9 @@ import java.util.List;
 
 public interface AdminPerfumeService {
 
-    PageResponse<AdminPerfumeCardDTO> getAllPerfumes(int page, int size, PerfumeType perfumeType, PerfumeSeason perfumeSeason);
+    PageResponse<AdminPerfumeCardDTO> getAllPerfumes(int page, int size, PerfumeType perfumeType, PerfumeSeason perfumeSeason, Boolean active);
 
-    PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword);
+    PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword, Boolean active);
 
     void createPerfume(CreatePerfumeRequest createPerfumeRequest, List<MultipartFile> images);
 

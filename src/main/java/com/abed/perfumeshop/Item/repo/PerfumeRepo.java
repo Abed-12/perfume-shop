@@ -41,20 +41,27 @@ public interface PerfumeRepo extends JpaRepository<Perfume, Long> {
     Page<Perfume> searchActivePerfumes(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT p FROM Perfume p " +
-            "WHERE (:perfumeType IS NULL OR p.perfumeType = :perfumeType) " +
+            "WHERE (:active IS NULL OR p.item.active = :active) " +
+            "AND (:perfumeType IS NULL OR p.perfumeType = :perfumeType) " +
             "AND (COALESCE(:perfumeSeason, '') = '' OR  CONCAT(',', p.perfumeSeasons, ',') LIKE CONCAT('%,', :perfumeSeason, ',%'))")
     Page<Perfume> findAllWithFilters(
             @Param("perfumeType") PerfumeType perfumeType,
             @Param("perfumeSeason") String perfumeSeason,
+            @Param("active") Boolean active,
             Pageable pageable
     );
 
     @Query("SELECT DISTINCT p FROM Perfume p " +
             "LEFT JOIN ItemTranslation t ON t.item = p.item " +
-            "WHERE " +
+            "WHERE (:active IS NULL OR p.item.active = :active) " +
+            "AND (" +
             "    LOWER(p.item.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "    OR LOWER(p.item.brand) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "    OR LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page<Perfume> searchAllPerfumes(@Param("keyword") String keyword, Pageable pageable);
+            "    OR LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Perfume> searchAllPerfumes(
+            @Param("keyword") String keyword,
+            @Param("active") Boolean active,
+            Pageable pageable
+    );
 
 }

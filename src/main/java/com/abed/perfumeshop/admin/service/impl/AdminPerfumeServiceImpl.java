@@ -44,18 +44,18 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             int page,
             int size,
             PerfumeType perfumeType,
-            PerfumeSeason perfumeSeason
+            PerfumeSeason perfumeSeason,
+            Boolean active
     ) {
-        // Convert PerfumeSeason to String (or null)
         String perfumeSeasonString = perfumeSeason != null ? perfumeSeason.name() : null;
-        Page<Perfume> perfumesPage = perfumeRepo.findAllWithFilters(perfumeType, perfumeSeasonString, PageRequest.of(page, size));
+        Page<Perfume> perfumesPage = perfumeRepo.findAllWithFilters(perfumeType, perfumeSeasonString, active, PageRequest.of(page, size));
 
         return buildAdminPerfumeCardResponse(perfumesPage);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword) {
+    public PageResponse<AdminPerfumeCardDTO> searchPerfumes(int page, int size, String keyword, Boolean active) {
         if (keyword == null || keyword.trim().isEmpty()) {
             throw new ValidationException("perfume.search.keyword.required");
         }
@@ -64,7 +64,7 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
             throw new ValidationException("perfume.search.keyword.too.short");
         }
 
-        Page<Perfume> perfumesPage = perfumeRepo.searchAllPerfumes(keyword, PageRequest.of(page, size));
+        Page<Perfume> perfumesPage = perfumeRepo.searchAllPerfumes(keyword, active, PageRequest.of(page, size));
 
         return buildAdminPerfumeCardResponse(perfumesPage);
     }
@@ -388,20 +388,31 @@ public class AdminPerfumeServiceImpl implements AdminPerfumeService {
                 .toList();
 
         List<PerfumeImage> primaryImages = perfumeImageRepo.findPrimaryImagesByPerfumeIds(perfumeIds);
-        List<ItemPrice> allPrices = itemPriceRepo.findCurrentActivePricesByItemIds(itemIds);
+        List<ItemPrice> activePrices = itemPriceRepo.findCurrentActivePricesByItemIds(itemIds);
         List<ItemTranslation> allTranslations = itemTranslationRepo.findByItemIds(itemIds);
 
         Map<Long, PerfumeImage> primaryImageByPerfume = primaryImages.stream()
                 .collect(Collectors.toMap(
                         img -> img.getPerfume().getId(),
-                        img -> img
+                        img -> img,
+                        (a, b) -> a
                 ));
 
-        Map<Long, ItemPrice> pricesByItem = allPrices.stream()
+        Map<Long, ItemPrice> pricesByItem = activePrices.stream()
                 .collect(Collectors.toMap(
                         itemPrice -> itemPrice.getItem().getId(),
-                        p -> p
+                        p -> p,
+                        (a, b) -> a
                 ));
+
+        Set<Long> itemIdsWithoutPrice = itemIds.stream()
+                .filter(id -> !pricesByItem.containsKey(id))
+                .collect(Collectors.toSet());
+
+        if (!itemIdsWithoutPrice.isEmpty()) {
+            List<ItemPrice> fallbackPrices = itemPriceRepo.findLatestPricesByItemIds(new ArrayList<>(itemIdsWithoutPrice));
+            fallbackPrices.forEach(p -> pricesByItem.putIfAbsent(p.getItem().getId(), p));
+        }
 
         Map<Long, Map<String, String>> translationsByItem = allTranslations.stream()
                 .collect(Collectors.groupingBy(

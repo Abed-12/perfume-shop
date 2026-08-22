@@ -2,6 +2,7 @@ package com.abed.perfumeshop.customer.controller;
 
 import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.OrderStatus;
+import com.abed.perfumeshop.common.enums.OrderType;
 import com.abed.perfumeshop.common.res.Response;
 import com.abed.perfumeshop.customer.service.CustomerOrderService;
 import com.abed.perfumeshop.order.dto.request.CancelCustomerOrderRequest;
@@ -40,9 +41,10 @@ public class CustomerOrderController {
     public ResponseEntity<Response<PageResponse<OrderSummaryDTO>>> getOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) OrderStatus status
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) OrderType orderType
     ) {
-        PageResponse<OrderSummaryDTO> pageResponse = customerOrderService.getOrders(page, size, status);
+        PageResponse<OrderSummaryDTO> pageResponse = customerOrderService.getOrders(page, size, status, orderType);
 
         return ResponseEntity.ok(
                 Response.<PageResponse<OrderSummaryDTO>>builder()

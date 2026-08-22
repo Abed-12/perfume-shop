@@ -9,7 +9,6 @@ import com.abed.perfumeshop.common.enums.OrderStatus;
 import com.abed.perfumeshop.common.exception.BadRequestException;
 import com.abed.perfumeshop.common.exception.NotFoundException;
 import com.abed.perfumeshop.common.exception.ValidationException;
-import com.abed.perfumeshop.common.service.EnumLocalizationService;
 import com.abed.perfumeshop.customer.entity.Customer;
 import com.abed.perfumeshop.notification.dto.response.EmailNotificationDTO;
 import com.abed.perfumeshop.notification.service.NotificationSenderFacade;
@@ -55,12 +54,14 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     private final AdminHelper adminHelper;
     private final OrderDetailBuilder orderDetailBuilder;
     private final OrderInventoryHelper orderInventoryHelper;
-    private final EnumLocalizationService enumLocalizationService;
     private final NotificationSenderFacade notificationSenderFacade;
     private final MessageSource messageSource;
 
-    @Value("${order.tracking.link}")
-    private String orderTrackingLink;
+    @Value("${order.tracking.link.customer}")
+    private String customerTrackingLink;
+
+    @Value("${order.tracking.link.guest}")
+    private String guestTrackingLink;
 
     @Override
     public PageResponse<AdminOrderSummaryDTO> getCustomerOrders(int page, int size, OrderStatus status) {
@@ -214,7 +215,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         return AdminOrderSummaryDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .orderDate(order.getOrderDate())
                 .customerName(customer.getFirstName() + " " + customer.getLastName())
                 .customerEmail(customer.getEmail())
@@ -231,7 +232,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
         return AdminOrderSummaryDTO.builder()
                 .orderNumber(order.getOrderNumber())
-                .status(enumLocalizationService.getLocalizedName(order.getStatus()))
+                .status(order.getStatus().name())
                 .orderDate(order.getOrderDate())
                 .customerName(guestOrder.getUsername())
                 .customerEmail(guestOrder.getEmail())
@@ -296,8 +297,8 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         templateVariables.put("deliveredAt", order.getDeliveredAt());
 
         String trackingLink = isGuestOrder
-                ? orderTrackingLink + order.getOrderNumber() + "&email=" + recipientEmail
-                : orderTrackingLink + order.getOrderNumber();
+                ? guestTrackingLink + order.getOrderNumber() + "&email=" + recipientEmail
+                : customerTrackingLink + order.getOrderNumber();
 
         templateVariables.put("trackingLink", trackingLink);
 

@@ -2,6 +2,7 @@ package com.abed.perfumeshop.customer.service;
 
 import com.abed.perfumeshop.common.dto.response.PageResponse;
 import com.abed.perfumeshop.common.enums.OrderStatus;
+import com.abed.perfumeshop.common.enums.OrderType;
 import com.abed.perfumeshop.order.dto.request.CancelCustomerOrderRequest;
 import com.abed.perfumeshop.order.dto.request.CreateCustomerOrderRequest;
 import com.abed.perfumeshop.order.dto.response.CustomerOrderDetailDTO;
@@ -12,7 +13,7 @@ public interface CustomerOrderService {
 
     OrderResponseDTO createOrder(CreateCustomerOrderRequest createCustomerOrderRequest);
 
-    PageResponse<OrderSummaryDTO> getOrders(int page, int size, OrderStatus status);
+    PageResponse<OrderSummaryDTO> getOrders(int page, int size, OrderStatus status, OrderType orderType);
 
     CustomerOrderDetailDTO getCustomerOrderByOrderNumber(String orderNumber);
 

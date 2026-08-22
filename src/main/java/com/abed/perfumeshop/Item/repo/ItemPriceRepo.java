@@ -22,6 +22,14 @@ public interface ItemPriceRepo extends JpaRepository<ItemPrice, Long> {
             ")")
     List<ItemPrice> findCurrentActivePricesByItemIds(@Param("itemIds") List<Long> itemIds);
 
+    @Query("SELECT ip FROM ItemPrice ip " +
+            "WHERE ip.id IN (" +
+            "  SELECT MAX(ip2.id) FROM ItemPrice ip2 " +
+            "  WHERE ip2.item.id IN :itemIds " +
+            "  GROUP BY ip2.item.id" +
+            ")")
+    List<ItemPrice> findLatestPricesByItemIds(@Param("itemIds") List<Long> itemIds);
+
     List<ItemPrice> findByItemIdAndIsActiveTrue(Long itemId);
 
     Optional<ItemPrice> findByItemIdAndPerfumeSizeAndIsActiveTrue(Long itemId, PerfumeSize perfumeSize);
