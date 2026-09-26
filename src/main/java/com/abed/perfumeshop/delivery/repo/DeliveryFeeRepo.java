@@ -17,4 +17,6 @@ public interface DeliveryFeeRepo extends JpaRepository<DeliveryFee, Long> {
 
     List<DeliveryFee> findByActiveTrueOrderByGovernorateAsc();
 
+    List<DeliveryFee> findAllByOrderByGovernorateAsc();
+
 }
