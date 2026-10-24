@@ -274,3 +274,29 @@ CREATE TABLE password_reset_codes (
     CONSTRAINT uk_password_reset_codes_code UNIQUE (code),
     CONSTRAINT ck_password_reset_codes_user_type CHECK (user_type IN ('ADMIN', 'CUSTOMER'))
 );
+
+-- ========== Query indexes ==========
+
+CREATE INDEX idx_item_prices_item_active_size
+    ON item_prices (item_id, is_active, perfume_size);
+
+CREATE INDEX idx_perfume_images_perfume_display_order
+    ON perfume_images (perfume_id, display_order);
+
+CREATE INDEX idx_order_items_order
+    ON order_items (order_id);
+
+CREATE INDEX idx_customer_orders_customer
+    ON customer_orders (customer_id);
+
+CREATE INDEX idx_guest_orders_claimed_customer
+    ON guest_orders (claimed_by_customer_id);
+
+CREATE INDEX idx_guest_orders_email_claimed_customer
+    ON guest_orders (email, claimed_by_customer_id);
+
+CREATE INDEX idx_orders_order_date
+    ON orders (order_date DESC);
+
+CREATE INDEX idx_user_notifications_user_received
+    ON user_notifications (user_id, user_type, received_at DESC);
